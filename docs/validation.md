@@ -419,3 +419,14 @@ The earlier importer incorrectly inverted the front/back axis and assumed the su
 A dedicated mount screen separates Saddle, Saddlebags and Lantern slots from bag cargo and player inventory. Cargo slots are inactive, hidden, and reject inserts, pickups and shift-clicks without bags. Equipping bags immediately enables the 27-slot grid; removal hides and disables it again. Both donkey and mule behavior are covered, including absence of native chest inventory. Horse equipment keeps its separate four-slot layout.
 
 Validation: full build and shader API checks passed; **80/80 server tests** and **39 native client checks** passed. Native visuals were inspected for the corrected equipped mesh, centered item icon, readable equipment labels, and cargo disappearance after physically removing the bag into player inventory. The client checks confirm the dedicated equipped mesh is registered and baked. This replaces the earlier incorrect transform validation, which only counted cubes and did not compare the exported coordinates to the user's Java reference.
+
+
+## Sleeping bags — 0.1.5 (2026-11-20)
+
+- Full build: **87 dedicated-server GameTests passed**, zero failures; shader API detection checks passed.
+- Graphical Minecraft client: **108 smoke checks passed**. All 16 sleeping-bag item models, their tints, and both placed block halves baked successfully. Equipped/removed roll changes synchronized correctly, and the dedicated Bedroll slot enforced removing it before the saddlebags.
+- Added server coverage for all matching-wool recipes, real two-block item placement, low floor shape, a single-item drop, successful/failed sleep preserving spawn (including no existing spawn), ordinary beds retaining their spawn behavior, exactly 200 versus 100 sleep ticks, timer reset, donkey/mule equipment rules, save/load, separate death drops, and vanilla Nether/End explosions.
+- Independent model check: 13 permanent saddlebag cubes plus one optional sleeping-bag cube still match the supplied Donkey.java reference. Inventory geometry remains uniformly scaled. Native screenshots checked the four equipment slots and mounted roll; temporary vanilla-texture materials remain in use.
+- Release JAR: JSON parsed, all sleeping-bag recipes/blockstates matched source, correct 0.1.5 metadata, no GameTest classes or nested third-party JARs.
+
+This update was exercised with the base NeoForge client/server. The full external modpack and shader pack were not rerun for this feature.

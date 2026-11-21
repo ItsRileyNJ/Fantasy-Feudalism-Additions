@@ -7,6 +7,7 @@ from copy import deepcopy
 
 MOD = 'fantasy_feudalism_items'
 PEG = '7b1d31c5-c651-3052-5840-24af49eb1301'
+ROLL = 'c81b87a2-78bd-e66b-886a-d06462ccdc8b'
 
 def rotate(point, origin, angles):
     p = [a-b for a,b in zip(point,origin)]
@@ -20,7 +21,7 @@ def rotate(point, origin, angles):
 def generate(root):
     root=Path(root);source=json.loads((root/'models/Saddlebag.bbmodel').read_text())
     groups={g['uuid']:g for g in source['groups']};cubes={e['uuid']:e for e in source['elements'] if e['type']=='cube' and e.get('export',True)}
-    body=groups[source['outliner'][0]['uuid']]['origin'];parts=[];peg=None
+    body=groups[source['outliner'][0]['uuid']]['origin'];parts=[];roll=[];peg=None
     def walk(nodes,parents):
         nonlocal peg
         for node in nodes:
@@ -48,10 +49,14 @@ def generate(root):
             size=[b-a for a,b in zip(cube['from'],cube['to'])]
             material='leather' if cube['name'] in ('BagL','BagR') else 'metal' if size==[2,2,1] else 'strap'
             faces={side:{'texture':'#'+material,'uv':[0,0,16,16],**({'tintindex':0} if material=='leather' else {})} for side in ('north','south','east','west','up','down')}
-            parts.append({'from':bounds[0],'to':bounds[1],'faces':faces})
+            if node==ROLL:
+                roll.append({'from':bounds[0],'to':bounds[1],'faces':{side:{'texture':'#fabric','uv':[0,0,16,16],'tintindex':0} for side in faces}})
+            else:parts.append({'from':bounds[0],'to':bounds[1],'faces':faces})
     walk(source['outliner'],[])
-    assert len(parts)==len(cubes) and peg is not None
+    assert len(parts)+len(roll)==len(cubes) and len(roll)==1 and peg is not None
     model={'parent':'minecraft:block/block','textures':{'leather':'minecraft:block/white_wool','strap':'minecraft:block/brown_terracotta','metal':'minecraft:block/iron_block','particle':'minecraft:block/brown_terracotta'},'display':{'gui':{'rotation':[25,140,0],'scale':[0.75,0.75,0.75]},'ground':{'translation':[0,3,0],'scale':[0.5,0.5,0.5]},'thirdperson_righthand':{'rotation':[0,90,0],'scale':[0.5,0.5,0.5]},'fixed':{'rotation':[0,0,0],'translation':[0,0,0],'scale':[1,1,1]}},'elements':parts}
+    sleeping_model={'parent':'minecraft:block/block','textures':{'fabric':'minecraft:block/white_wool','particle':'minecraft:block/white_wool'},'elements':roll}
+    (root/f'src/main/resources/assets/{MOD}/models/item/sleeping_bag_equipped.json').write_text(json.dumps(sleeping_model,indent=2)+'\n')
     mounted=deepcopy(model);mounted.pop('display')
     dest=root/f'src/main/resources/assets/{MOD}/models/item/saddlebag_equipped.json';dest.write_text(json.dumps(mounted,indent=2)+'\n')
     # Inventory/held geometry is centered independently, with uniform scale.

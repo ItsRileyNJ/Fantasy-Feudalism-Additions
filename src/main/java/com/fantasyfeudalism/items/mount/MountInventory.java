@@ -8,7 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemContainerContents;
 
-/** Top row: saddle, armor, horseshoe, lantern, saddlebag. Remaining rows are the bag's cargo. */
+/** Top row: saddle, armor, horseshoe, lantern, saddlebag, sleeping bag. Remaining rows are the bag's cargo. */
 public final class MountInventory extends SimpleContainer {
     private final AbstractHorse horse;
     private boolean ready, writing;
@@ -16,7 +16,7 @@ public final class MountInventory extends SimpleContainer {
     public MountInventory(AbstractHorse horse) {
         super(36);this.horse=horse;writing=true;
         super.setItem(0,horse.getSlot(400).get());super.setItem(1,horse.getBodyArmorItem());
-        for(int i=2;i<=4;i++)super.setItem(i,MountEquipment.item(horse,i));
+        for(int i=2;i<=5;i++)super.setItem(i,MountEquipment.item(horse,i));
         loadBag();writing=false;ready=true;
     }
     private void loadBag() {
@@ -32,6 +32,7 @@ public final class MountInventory extends SimpleContainer {
             case 1->horse instanceof Horse && item.getItem() instanceof AnimalArmorItem armor && armor.getBodyType()==AnimalArmorItem.BodyType.EQUESTRIAN;
             case 2->horse instanceof Horse && item.getItem() instanceof Horseshoe;
             case 3->item.is(Items.LANTERN)||item.is(Items.SOUL_LANTERN);
+            case 5->(horse instanceof Donkey||horse instanceof Mule)&&bagPresent&&com.fantasyfeudalism.items.sleep.SleepingBags.isSleepingBag(item);
             case 4->(horse instanceof Donkey||horse instanceof Mule)&&item.is(MountContent.SADDLEBAG.get());
             default->slot>=9&&bagPresent&&SaddlebagItem.allowed(item);
         };
@@ -41,7 +42,7 @@ public final class MountInventory extends SimpleContainer {
         if(getItem(4)!=loadedBag||getItem(4).isEmpty())loadBag();
         if(!getItem(4).isEmpty())getItem(4).set(DataComponents.CONTAINER,ItemContainerContents.fromItems(java.util.stream.IntStream.range(9,36).mapToObj(this::getItem).toList()));
         horse.getSlot(400).set(getItem(0));horse.setBodyArmorItem(getItem(1));
-        for(int i=2;i<=4;i++)MountEquipment.set(horse,i,getItem(i));
+        for(int i=2;i<=5;i++)MountEquipment.set(horse,i,getItem(i));
         MountEquipment.apply(horse);writing=false;
     }
     @Override public boolean stillValid(Player player) {return horse.isAlive()&&horse.distanceToSqr(player)<64;}

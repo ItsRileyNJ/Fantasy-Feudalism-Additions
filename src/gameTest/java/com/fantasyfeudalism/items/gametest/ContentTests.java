@@ -301,7 +301,7 @@ public final class ContentTests {
         var player=h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         for(var type:java.util.List.of(EntityType.DONKEY,EntityType.MULE)){
             var mount=type.create(h.getLevel());mount.setTamed(true);var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
-            h.assertTrue(menu.getSlot(0).x==23&&menu.getSlot(4).x==79&&menu.getSlot(3).x==135,"Separate saddle, saddlebag and lantern equipment positions");
+            h.assertTrue(menu.getSlot(0).x==17&&menu.getSlot(4).x==59&&menu.getSlot(5).x==101&&menu.getSlot(3).x==143,"Separate saddle, saddlebag and lantern equipment positions");
             h.assertTrue(menu.getSlot(0).mayPlace(new ItemStack(Items.SADDLE)),"Saddle belongs in dedicated saddle slot");
             h.assertFalse(menu.getSlot(0).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag cannot replace a saddle");
             h.assertTrue(menu.getSlot(4).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag belongs in its own equipment slot");

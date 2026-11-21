@@ -147,3 +147,5 @@ runpy.run_path(str(Path(__file__).with_name("saddlebag-model.py")))["generate"](
 lang=json.loads((ROOT/f"assets/{MOD}/lang/en_us.json").read_text())
 lang.update({'container.fantasy_feudalism_items.armor': 'Armor', 'container.fantasy_feudalism_items.shoes': 'Shoe', 'container.fantasy_feudalism_items.saddlebags': 'Saddlebags', 'container.fantasy_feudalism_items.bag_storage': 'Saddlebag Storage', 'container.fantasy_feudalism_items.equip_bags': 'Equip saddlebags for storage'})
 write(f"assets/{MOD}/lang/en_us.json",lang)
+
+runpy.run_path(str(Path(__file__).with_name("sleeping-bag-resources.py")))["generate"](ROOT.parents[2])

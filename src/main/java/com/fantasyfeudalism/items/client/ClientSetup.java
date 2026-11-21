@@ -11,7 +11,8 @@ import net.neoforged.api.distmarker.Dist;
 @EventBusSubscriber(modid=FeudalItems.ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class ClientSetup {
     @SubscribeEvent public static void models(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){
-        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
+        event.register(MountLayer.SADDLEBAG_MODEL);
+        event.register(MountLayer.SLEEPING_BAG_MODEL);
     }
     @SubscribeEvent public static void particles(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event){
         event.registerSpriteSet(com.fantasyfeudalism.items.trophy.TrophyParticles.IDLE.get(),sprites->TrophyAuraParticle.provider(sprites,false));
@@ -27,6 +28,7 @@ public final class ClientSetup {
         event.<BagMenu,StorageScreen<BagMenu>>register(MountContent.BAG_MENU.get(),(menu,inventory,title)->new StorageScreen<>(menu,inventory,title));event.register(MountContent.MOUNT_MENU.get(),MountScreen::new);
     }
     @SubscribeEvent public static void colors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event){
+        for(var item:com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.values())event.register((stack,index)->index==0?(0xFF000000|com.fantasyfeudalism.items.sleep.SleepingBags.color(stack).getTextureDiffuseColor()):-1,item.get());
         event.register((stack,index)->index==0?DyedItemColor.getOrDefault(stack,0x8B5A2B):0xFFFFFF,MountContent.SADDLEBAG.get());
         event.register((stack,index)->index==0?0xFFDCEFAD:-1,Content.GLOW_OIL.get());
         event.register(Horseshoe::itemColor,MountContent.COPPER.get(),MountContent.IRON.get(),MountContent.GOLD.get(),MountContent.DIAMOND.get(),MountContent.NETHERITE.get());

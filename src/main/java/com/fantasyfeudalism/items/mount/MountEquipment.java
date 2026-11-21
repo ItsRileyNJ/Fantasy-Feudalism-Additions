@@ -47,7 +47,7 @@ public final class MountEquipment {
             if(item(horse,4).isEmpty())set(horse,4,migrated);else horse.spawnAtLocation(migrated);
             horse.getSlot(499).set(ItemStack.EMPTY);
         }
-        for(int i=2;i<=4;i++)set(horse,i,item(horse,i));apply(horse);
+        for(int i=2;i<=5;i++)set(horse,i,item(horse,i));apply(horse);
     }
     public static void apply(AbstractHorse horse){
         var shoe=item(horse,2).getItem();var speed=horse.getAttribute(Attributes.MOVEMENT_SPEED);var jump=horse.getAttribute(Attributes.JUMP_STRENGTH);
@@ -66,7 +66,7 @@ public final class MountEquipment {
     }
     public static void drops(LivingDropsEvent event){
         if(!(event.getEntity() instanceof AbstractHorse horse)||!supported(horse))return;
-        for(int i=2;i<=4;i++){var stack=item(horse,i);if(!stack.isEmpty()){event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(horse.level(),horse.getX(),horse.getY(),horse.getZ(),stack));set(horse,i,ItemStack.EMPTY);}}
+        for(int i=2;i<=5;i++){var stack=item(horse,i);if(!stack.isEmpty()){event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(horse.level(),horse.getX(),horse.getY(),horse.getZ(),stack));set(horse,i,ItemStack.EMPTY);}}
     }
     public static void damage(LivingIncomingDamageEvent event){if(event.getEntity() instanceof Horse horse&&event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FALL)&&item(horse,2).getItem() instanceof Horseshoe shoe)event.setAmount((float)(event.getAmount()*(1-shoe.fall)));}
     public static long remaining(ItemStack lantern){return LightItemFuel.remaining(lantern);}

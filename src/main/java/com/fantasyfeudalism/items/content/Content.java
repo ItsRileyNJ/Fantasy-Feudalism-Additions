@@ -28,6 +28,7 @@ public final class Content {
         output.accept(new ItemStack(com.fantasyfeudalism.items.mount.MountContent.HALF.get()));
         for(var shoe:java.util.List.of(com.fantasyfeudalism.items.mount.MountContent.COPPER,com.fantasyfeudalism.items.mount.MountContent.IRON,com.fantasyfeudalism.items.mount.MountContent.GOLD,com.fantasyfeudalism.items.mount.MountContent.DIAMOND,com.fantasyfeudalism.items.mount.MountContent.NETHERITE))output.accept(new ItemStack(shoe.get()));
         for(var eye:com.fantasyfeudalism.items.spawner.SpawnerEyes.ITEMS.values())output.accept(new ItemStack(eye.get()));
+        for(var bag:com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.values())output.accept(new ItemStack(bag.get()));
         output.accept(new ItemStack(BONE_DAGGER.get()));
         for (var block : com.fantasyfeudalism.items.trophy.Trophies.BLOCKS.values()) output.accept(new ItemStack(block.get()));
         output.accept(new ItemStack(com.fantasyfeudalism.items.trophy.Trophies.STRAY_HEAD.get()));

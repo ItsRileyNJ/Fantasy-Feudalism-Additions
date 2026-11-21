@@ -105,7 +105,7 @@ public final class ClientSmoke {
                 var bag=ItemStack.parse(client.level.registryAccess(),donkey.getData(ModAttachments.MOUNT).getCompound("Slot4")).orElseThrow();check(bag.has(DataComponents.DYED_COLOR),"Equipped saddlebag dye is synchronized to rendering client");
                 var bagModel=client.getItemRenderer().getModel(bag,client.level,client.player,0);
                 var quads=bagModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0));
-                check(quads.size()==84,"Supplied saddlebag renders all fourteen model pieces");
+                check(quads.size()==78,"Supplied saddlebag renders thirteen permanent model pieces without the sleeping bag");
                 check(quads.stream().filter(q->q.isTinted()&&q.getTintIndex()==0).count()==12,"Both bag bodies remain dyeable while fittings keep their color");
                 client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(horseId);var lantern=MountEquipment.item(mount,3);LightItemFuel.set(lantern,100,false);MountEquipment.set(mount,3,lantern);});phase=2;ticks=0;return;
             }
@@ -127,10 +127,40 @@ public final class ClientSmoke {
             }
             if(phase==5){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Donkey)||menu.getContainer().getItem(4).isEmpty()||menu.getContainer().getItem(0).isEmpty())return;
-                check(menu.getSlot(0).x==23&&menu.getSlot(4).x==79,"Donkey saddle and bags synchronize in separate equipment slots");
+                check(menu.getSlot(0).x==17&&menu.getSlot(4).x==59&&menu.getSlot(5).x==101&&menu.getSlot(3).x==143,"Donkey saddle and bags synchronize in separate equipment slots");
                 check(menu.getSlot(9).y==72&&menu.getSlot(36).y==146,"Donkey cargo and player inventory occupy separate sections");
                 var equippedModel=client.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
-                check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==84,"Dedicated equipped saddlebag model is registered and baked");
+                check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==78,"Dedicated equipped saddlebag model is registered and baked");
+                check(MountVisuals.sleepingBag(menu.horse).isEmpty(),"No sleeping bag renders before one is equipped");
+                var rollModel=client.getModelManager().getModel(com.fantasyfeudalism.items.client.MountLayer.SLEEPING_BAG_MODEL);
+                check(rollModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==6,"Rear sleeping bag is a separate six-face model");
+                for(var color:DyeColor.values()){
+                    var roll=new ItemStack(com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.get(color).get());
+                    var model=client.getItemRenderer().getModel(roll,client.level,client.player,0);
+                    check(model!=client.getModelManager().getMissingModel()&&model.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==6,"Sleeping bag item model baked: "+color.getName());
+                    check(client.getItemColors().getColor(roll,0)==(0xFF000000|color.getTextureDiffuseColor()),"Sleeping bag tint matches: "+color.getName());
+                    var block=com.fantasyfeudalism.items.sleep.SleepingBags.BLOCKS.get(color).get();
+                    for(var part:net.minecraft.world.level.block.state.properties.BedPart.values()){
+                        var state=block.defaultBlockState().setValue(net.minecraft.world.level.block.BedBlock.PART,part);
+                        check(client.getBlockRenderer().getBlockModel(state)!=client.getModelManager().getMissingModel(),"Floor sleeping bag model baked: "+color.getName()+" "+part);
+                    }
+                }
+                client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(donkeyId);MountEquipment.set(mount,5,new ItemStack(com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.get(DyeColor.BLUE).get()));});phase=6;ticks=0;return;
+            }
+            if(phase==6){
+                var donkey=entity(client,donkeyId);if(donkey==null||MountVisuals.sleepingBag(donkey).isEmpty())return;
+                check(com.fantasyfeudalism.items.sleep.SleepingBags.color(MountVisuals.sleepingBag(donkey))==DyeColor.BLUE,"Mounted sleeping bag and color synchronize to client");
+                client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(donkeyId);MountEquipment.set(mount,5,ItemStack.EMPTY);});phase=7;ticks=0;return;
+            }
+            if(phase==7){
+                var donkey=entity(client,donkeyId);if(donkey==null||!MountVisuals.sleepingBag(donkey).isEmpty())return;
+                check(MountVisuals.bag(donkey).is(com.fantasyfeudalism.items.mount.MountContent.SADDLEBAG.get()),"Removing roll hides it without removing saddlebags");
+                // Keep the preview menu and entity equipped for visual inspection.
+                client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(donkeyId);var inventory=MountEquipment.inventory(mount);inventory.setItem(5,new ItemStack(com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.get(DyeColor.BLUE).get()));player.closeContainer();player.openMenu(new SimpleMenuProvider((id,inv,p)->new MountMenu(id,inv,inventory),Component.literal("Donkey Equipment")),buffer->buffer.writeVarInt(mount.getId()));});phase=8;ticks=0;return;
+            }
+            if(phase==8){
+                if(!(client.player.containerMenu instanceof MountMenu menu)||menu.getContainer().getItem(5).isEmpty())return;
+                check(!menu.getSlot(4).mayPickup(client.player)&&menu.getSlot(5).mayPickup(client.player),"Client equipment slots enforce sleeping bag removal first");
                 report(true,null);phase=-1;
             }
         }catch(Throwable error){error.printStackTrace();report(false,error);phase=-1;}

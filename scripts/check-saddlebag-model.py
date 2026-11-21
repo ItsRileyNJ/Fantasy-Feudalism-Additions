@@ -21,14 +21,14 @@ def check():
             expected.append(bounds([(c*u+s*t+x+body[0],v+y+body[1],-s*u+c*t+z+body[2])
                                     for u,v,t in product((a,a+w),(b,b+h),(d,d+depth))]))
     models=ROOT/'src/main/resources/assets/fantasy_feudalism_items/models/item'
-    equipped=json.loads((models/'saddlebag_equipped.json').read_text());actual=[]
-    for e in equipped['elements']:
+    equipped=json.loads((models/'saddlebag_equipped.json').read_text());roll=json.loads((models/'sleeping_bag_equipped.json').read_text());actual=[]
+    for e in equipped['elements']+roll['elements']:
         # Undo ItemRenderer centering/entity Y/Z flip and apply the native body pivot.
         actual.append(bounds([(p[0]-8,11-(p[1]-8),5-(p[2]-8)) for p in product(*zip(e['from'],e['to']))]))
     assert len(actual)==len(expected)==14
     assert Counter(actual)==Counter(expected),'Mounted geometry differs from the supplied Java reference'
     inventory=json.loads((models/'saddlebag.json').read_text())
-    assert len(inventory['elements'])==14
+    assert len(inventory['elements'])==len(equipped['elements'])==13 and len(roll['elements'])==1
     ratios=[]
     for source,icon in zip(equipped['elements'],inventory['elements']):
         assert set(source['faces'])==set(icon['faces'])=={'north','south','east','west','up','down'}
@@ -37,5 +37,5 @@ def check():
     for axis in range(3):
         low=min(e['from'][axis] for e in inventory['elements']);high=max(e['to'][axis] for e in inventory['elements'])
         assert abs((low+high)/2-8)<1e-5 and high-low<=14.00001
-    print('14/14 equipped cubes match Donkey.java; inventory preserves shape with uniform scale and centering.')
+    print('13 saddlebag cubes + 1 optional sleeping bag match Donkey.java; inventory preserves shape.')
 if __name__=='__main__':check()

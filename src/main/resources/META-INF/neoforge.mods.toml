@@ -3,7 +3,7 @@ loaderVersion="[4,)"
 license="All Rights Reserved"
 [[mods]]
 modId="fantasy_feudalism_items"
-version="0.1.4"
+version="0.1.5"
 displayName="Fantasy Feudalism Items"
 description="Medieval and fantasy equipment for the Fantasy Feudalism mod series."
 [[dependencies.fantasy_feudalism_items]]
@@ -29,3 +29,6 @@ config="trophy.mixins.json"
 
 [[mixins]]
 config="compat.mixins.json"
+
+[[mixins]]
+config="sleeping.mixins.json"

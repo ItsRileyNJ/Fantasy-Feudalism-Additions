@@ -1,0 +1,22 @@
+{
+  "parent": "fantasy_feudalism_items:root",
+  "display": {
+    "icon": {
+      "id": "fantasy_feudalism_items:white_sleeping_bag"
+    },
+    "title": "Portable Rest",
+    "description": "Obtain a sleeping bag"
+  },
+  "criteria": {
+    "sleeping_bag": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#fantasy_feudalism_items:sleeping_bags"
+          }
+        ]
+      }
+    }
+  }
+}

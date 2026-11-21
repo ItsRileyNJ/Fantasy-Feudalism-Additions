@@ -54,6 +54,7 @@ public final class FeudalItems {
         NeoForge.EVENT_BUS.addListener(com.fantasyfeudalism.items.lighting.LightInteractions::interact);
         com.fantasyfeudalism.items.spawner.SpawnerEyes.init();
         com.fantasyfeudalism.items.mount.MountContent.init();
+        com.fantasyfeudalism.items.sleep.SleepingBags.init();
         com.fantasyfeudalism.items.mount.MountContent.MENUS.register(bus);
         com.fantasyfeudalism.items.mount.SaddlebagLoot.REGISTRY.register(bus);
         com.fantasyfeudalism.items.mount.MountRecipes.init();
