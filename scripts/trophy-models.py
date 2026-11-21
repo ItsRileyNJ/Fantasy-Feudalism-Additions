@@ -40,6 +40,17 @@ def piglin_part(bounds, dimensions, texture_origin):
     return {'from': bounds[0], 'to': bounds[1],
             'faces': {side: {'uv': uv, 'texture': '#head'} for side, uv in head_uvs(spec).items()}}
 
+def enderman_inner_head(head, spec):
+    # EndermanModel's "hat" is an inset inner cube (UV 0,16; deformation -0.5).
+    # Its opaque skin closes the outer head's transparent underside/mouth.
+    inner = deepcopy(head)
+    inner['from'] = [n + 0.5 for n in head['from']]
+    inner['to'] = [n - 0.5 for n in head['to']]
+    inner_spec = (*spec[:6], 0, 16)
+    inner['faces'] = {side: {'uv': uv, 'texture': '#head'}
+                      for side, uv in head_uvs(inner_spec).items()}
+    return inner
+
 def piglin_model(stand, textures):
     # PiglinModel.addHead / PiglinHeadModel: native dimensions and texture regions.
     # Entity x/y axes are inverted to convert its skull coordinates to block space.
@@ -121,7 +132,9 @@ def generate(root):
             eye_sprite = f'{MOD}:trophy_heads/ender_dragon_eyes'
             sources.append({'type': 'minecraft:single', 'resource': 'minecraft:entity/enderman/enderman_eyes', 'sprite': eye_sprite})
             textures['head_overlay'] = eye_sprite
-            eyes = overlay_cube(elements[cubes.index(head)], 0.01)
+            head_element = elements[cubes.index(head)]
+            elements.append(enderman_inner_head(head_element, spec))
+            eyes = overlay_cube(head_element, 0.01)
             eyes['shade'] = False
             eyes['neoforge_data'] = {'block_light': 15, 'sky_light': 15, 'ambient_occlusion': False}
             elements.append(eyes)
@@ -136,7 +149,7 @@ def generate(root):
                 'textures': {'head': sprite, 'head_overlay': eye_sprite, 'particle': sprite},
                 'display': {'gui': {'rotation': [30, 45, 0], 'translation': [0, 0, 0], 'scale': [1, 1, 1]},
                             'ground': {'translation': [0, 3, 0], 'scale': [0.5, 0.5, 0.5]}},
-                'elements': [item_head, item_eyes],
+                'elements': [item_head, enderman_inner_head(item_head, spec), item_eyes],
             })
         result = {
             'parent': 'minecraft:block/block', 'ambientocclusion': source.get('ambientocclusion', True),

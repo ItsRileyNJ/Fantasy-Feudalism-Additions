@@ -403,3 +403,11 @@ refresh of lit placed torches. Existing mount, weather, placement, fuel, render
 predicate and light-hand tests were updated to the stage contract and passed.
 Recipe, unlock and tooltip regeneration checks also passed. The hover layout has
 not been verified in a graphical client under the existing display limitation.
+
+### Supplied saddlebag model and hanging lantern
+
+`models/Saddlebag.bbmodel` preserves the original untextured model. The exporter in `scripts/saddlebag-model.py` bakes its Body/BagL/BagR group pivots and quarter-turn rotations into one paired item model attached once to the mount's animated body. All fourteen cubes are retained. Two bag bodies use dye tint 0; straps and fittings use temporary untinted vanilla materials. The main resource generator invokes this exporter and generates the peg coordinates in `SaddlebagAttachment.java`.
+
+The lantern is attached to the small side peg identified by its source cube UUID. A vanilla chain and the equipped lantern share that pivot and lean outward and toward the rear at 20 degrees on each axis. Interpolated age and walking amplitude add gentle idle sway and stronger movement-driven jiggle. The bounded animation remains outward/rearward throughout, runs only on the client, and does not add physics or network updates. Lantern item rendering omits the inventory FIXED transform so its handle aligns with the end of the chain at the intended scale.
+
+Validation: full build and shader compatibility checks passed with **79/79 server tests**. The native client passed **36 smoke checks**, including all 84 baked saddlebag quads and twelve tinted bag-body quads. A dyed bag and equipped lantern were visually checked on a donkey, and a six-second idle preview was captured and decoded. Structural checks covered every source cube, valid model bounds, deterministic regeneration, the marked peg, and sway direction across idle/walking amplitudes. Mule rendering uses the same body-attached layer; no separate mule screenshot was taken.

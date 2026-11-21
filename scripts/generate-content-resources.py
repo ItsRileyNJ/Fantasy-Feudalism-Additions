@@ -41,9 +41,6 @@ item('trophy_mount',MOD+':item/trophy_mount')
 model('item/bone_dagger',{'parent':'minecraft:item/handheld','textures':{'layer0':MOD+':item/bone_dagger'}})
 for name in ['awkward_milk_potion','intermediate_milk_potion','animal_allegiance_potion','extended_animal_allegiance_potion']:model('item/'+name,{'parent':'minecraft:item/potion'})
 for tier in ['copper','iron','gold','diamond','netherite']:item(tier+'_horseshoe',MOD+':item/horseshoe')
-# Two-bag model is rendered once on either side of the animal, with the item dye tint.
-faces={side:{'texture':'#bag','tintindex':0} for side in ['north','south','east','west','up','down']}
-model('item/saddlebag',{'textures':{'bag':'minecraft:block/white_wool','particle':'minecraft:block/white_wool'},'elements':[{'from':[2,2,4],'to':[14,14,12],'faces':faces}]})
 model('block/fishing_trap',{'parent':'minecraft:block/cube_all','textures':{'all':'minecraft:block/oak_trapdoor'}})
 write(f'assets/{MOD}/blockstates/fishing_trap.json',{'variants':{'':{'model':MOD+':block/fishing_trap'}}})
 model('item/fishing_trap',{'parent':MOD+':block/fishing_trap'})
@@ -143,3 +140,6 @@ write(f'assets/{MOD}/lang/en_us.json',lang)
 # Keep the supplied Blockbench trophy geometry and vanilla head UVs authoritative.
 import runpy
 runpy.run_path(str(Path(__file__).with_name('trophy-models.py')))['generate'](ROOT.parents[2])
+
+# Preserve the supplied paired saddlebag geometry and generated lantern attachment.
+runpy.run_path(str(Path(__file__).with_name("saddlebag-model.py")))["generate"](ROOT.parents[2])

@@ -16,11 +16,36 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
         if(bag.isEmpty()&&lantern.isEmpty())return;
         pose.pushPose();((com.fantasyfeudalism.items.client.mixin.HorseBodyAccessor)getParentModel()).feudalItems$body().translateAndRotate(pose);
         if(horse.isBaby())pose.scale(.5f,.5f,.5f);
-        if(!bag.isEmpty()){renderItem(bag,pose,buffers,light,horse,-.48,0,-.12,.6f);renderItem(bag,pose,buffers,light,horse,.48,0,-.12,.6f);}
-        if(!lantern.isEmpty())renderItem(lantern,pose,buffers,light,horse,.47,-.05,-.65,.45f);
+        if(!bag.isEmpty()){renderItem(bag,pose,buffers,light,horse,0,0,0,1);}
+        if(!lantern.isEmpty()){
+            if(bag.isEmpty())renderItem(lantern,pose,buffers,light,horse,.47,-.05,-.65,.45f);
+            else renderHangingLantern(lantern,pose,buffers,light,horse,swing,amplitude,age);
+        }
+        pose.popPose();
+    }
+    private void renderHangingLantern(ItemStack lantern,PoseStack pose,MultiBufferSource buffers,int light,T horse,float walk,float amplitude,float age){
+        pose.pushPose();
+        pose.translate(SaddlebagAttachment.X,SaddlebagAttachment.Y,SaddlebagAttachment.Z);
+        // Entity-model +Y points down; +Z points toward the animal's rear.
+        float movement=net.minecraft.util.Mth.clamp(amplitude,0,1);
+        float phase=horse.getId()*.7f;
+        float outward=SaddlebagAttachment.OUTWARD_TILT+net.minecraft.util.Mth.sin(age*.08f+phase)*.8f+net.minecraft.util.Mth.sin(walk*.8f)*movement*5;
+        float rearward=SaddlebagAttachment.REARWARD_TILT+net.minecraft.util.Mth.sin(age*.065f+phase+1.1f)*.6f+net.minecraft.util.Mth.sin(walk*.8f+1.2f)*movement*4;
+        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-Math.copySign(outward,(float)SaddlebagAttachment.X)));
+        pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rearward));
+        pose.pushPose();
+        pose.scale(.5f,SaddlebagAttachment.CHAIN_LENGTH,.5f);
+        pose.translate(-.5,0,-.5);
+        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(net.minecraft.world.level.block.Blocks.CHAIN.defaultBlockState(),pose,buffers,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY);
+        pose.popPose();
+        // The vanilla lantern handle reaches one model pixel above its item center.
+        renderItem(lantern,pose,buffers,light,horse,0,SaddlebagAttachment.CHAIN_LENGTH+SaddlebagAttachment.LANTERN_SCALE/16,0,SaddlebagAttachment.LANTERN_SCALE,ItemDisplayContext.NONE);
         pose.popPose();
     }
     private void renderItem(ItemStack item,PoseStack pose,MultiBufferSource buffers,int light,T horse,double x,double y,double z,float scale){
-        pose.pushPose();pose.translate(x,y,z);pose.scale(scale,-scale,-scale);Minecraft.getInstance().getItemRenderer().renderStatic(item,ItemDisplayContext.FIXED,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,pose,buffers,horse.level(),horse.getId());pose.popPose();
+        renderItem(item,pose,buffers,light,horse,x,y,z,scale,ItemDisplayContext.FIXED);
+    }
+    private void renderItem(ItemStack item,PoseStack pose,MultiBufferSource buffers,int light,T horse,double x,double y,double z,float scale,ItemDisplayContext context){
+        pose.pushPose();pose.translate(x,y,z);pose.scale(scale,-scale,-scale);Minecraft.getInstance().getItemRenderer().renderStatic(item,context,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,pose,buffers,horse.level(),horse.getId());pose.popPose();
     }
 }
