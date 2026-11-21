@@ -38,6 +38,7 @@ public final class ClientSmoke {
         try{
             if(++ticks>1200)throw new AssertionError("Client smoke phase timed out: "+phase);
             if(phase==0){
+                client.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
                 var source=new com.fantasyfeudalism.items.client.DynamicLighting.Source(0,0,0,15);
                 var lights=List.of(source);
                 check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(lights,0,0,0,0)==240,"Dynamic source emits full brightness at its origin");
@@ -92,7 +93,7 @@ public final class ClientSmoke {
                     level.getEntitiesOfClass(AbstractHorse.class,new net.minecraft.world.phys.AABB(-6,145,-4,6,155,8)).forEach(Entity::discard);
                     player.connection.teleport(0.5,150,0.5,45,12);level.setBlockAndUpdate(new net.minecraft.core.BlockPos(2,149,2),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());level.setBlockAndUpdate(new net.minecraft.core.BlockPos(-2,149,2),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
                     var horse=EntityType.HORSE.create(level);horse.setPos(2.5,150,2.5);horse.setTamed(true);horse.setOwnerUUID(player.getUUID());horse.setNoAi(true);MountEquipment.set(horse,3,new ItemStack(Items.LANTERN));level.addFreshEntity(horse);horseId=horse.getUUID();
-                    var donkey=EntityType.DONKEY.create(level);donkey.setPos(-1.5,150,2.5);donkey.setTamed(true);donkey.setNoAi(true);donkey.setYRot(315);donkey.yBodyRot=315;donkey.yHeadRot=315;var bag=DyedItemColor.applyDyes(new ItemStack(MountContent.SADDLEBAG.get()),List.of((DyeItem)Items.RED_DYE));MountEquipment.set(donkey,4,bag);MountEquipment.set(donkey,3,new ItemStack(Items.LANTERN));level.addFreshEntity(donkey);donkeyId=donkey.getUUID();
+                    var donkey=EntityType.DONKEY.create(level);donkey.setPos(-1.5,150,2.5);donkey.setTamed(true);donkey.getSlot(400).set(new ItemStack(Items.SADDLE));donkey.setNoAi(true);donkey.setYRot(315);donkey.yBodyRot=315;donkey.yHeadRot=315;var bag=DyedItemColor.applyDyes(new ItemStack(MountContent.SADDLEBAG.get()),List.of((DyeItem)Items.RED_DYE));MountEquipment.set(donkey,4,bag);MountEquipment.set(donkey,3,new ItemStack(Items.LANTERN));level.addFreshEntity(donkey);donkeyId=donkey.getUUID();
                 });phase=1;ticks=0;return;
             }
             var horse=horseId==null?null:entity(client,horseId);
@@ -122,6 +123,14 @@ public final class ClientSmoke {
             if(phase==4){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||client.screen==null||menu.getContainer().getItem(3).isEmpty())return;
                 check(menu.getContainer().getContainerSize()==36&&menu.getContainer().getItem(3).is(Items.LANTERN),"Mount equipment screen opens and synchronizes dedicated lantern slot");
+                client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(donkeyId);player.openMenu(new SimpleMenuProvider((id,inventory,p)->new MountMenu(id,inventory,MountEquipment.inventory(mount)),Component.literal("Donkey Equipment")),buffer->buffer.writeVarInt(mount.getId()));});phase=5;ticks=0;return;
+            }
+            if(phase==5){
+                if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Donkey)||menu.getContainer().getItem(4).isEmpty()||menu.getContainer().getItem(0).isEmpty())return;
+                check(menu.getSlot(0).x==23&&menu.getSlot(4).x==79,"Donkey saddle and bags synchronize in separate equipment slots");
+                check(menu.getSlot(9).y==72&&menu.getSlot(36).y==146,"Donkey cargo and player inventory occupy separate sections");
+                var equippedModel=client.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
+                check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==84,"Dedicated equipped saddlebag model is registered and baked");
                 report(true,null);phase=-1;
             }
         }catch(Throwable error){error.printStackTrace();report(false,error);phase=-1;}

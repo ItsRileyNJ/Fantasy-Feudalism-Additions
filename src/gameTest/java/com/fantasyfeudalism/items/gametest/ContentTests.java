@@ -296,4 +296,30 @@ public final class ContentTests {
         h.assertFalse(LightItemFuel.lit(MountVisuals.lantern(horse)),"Cached light updates after attachment replacement");h.succeed();
     }
 
+    @GameTest(template="empty")
+    public static void mount_menu_separates_saddle_bags_and_cargo(GameTestHelper h){
+        var player=h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        for(var type:java.util.List.of(EntityType.DONKEY,EntityType.MULE)){
+            var mount=type.create(h.getLevel());mount.setTamed(true);var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
+            h.assertTrue(menu.getSlot(0).x==23&&menu.getSlot(4).x==79&&menu.getSlot(3).x==135,"Separate saddle, saddlebag and lantern equipment positions");
+            h.assertTrue(menu.getSlot(0).mayPlace(new ItemStack(Items.SADDLE)),"Saddle belongs in dedicated saddle slot");
+            h.assertFalse(menu.getSlot(0).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag cannot replace a saddle");
+            h.assertTrue(menu.getSlot(4).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag belongs in its own equipment slot");
+            h.assertFalse(menu.getSlot(4).mayPlace(new ItemStack(Items.SADDLE)),"Saddle cannot replace a bag");
+            h.assertFalse(menu.getSlot(9).isActive(),"Cargo is disabled without saddlebags");
+            inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));
+            h.assertTrue(menu.getSlot(9).isActive()&&menu.getSlot(9).y==72,"Equipping bag enables a separate cargo grid");
+            h.assertTrue(menu.getSlot(36).y==146,"Player inventory stays below cargo");
+            inventory.removeItemNoUpdate(4);inventory.setChanged();
+            h.assertFalse(menu.getSlot(9).isActive(),"Removing the bag removes cargo access");
+            h.assertFalse(menu.getSlot(9).mayPlace(new ItemStack(Items.EMERALD)),"No quick-move or click can store cargo without a bag");
+            h.assertFalse(menu.getSlot(9).mayPickup(player),"Disabled cargo cannot be picked up");
+            h.assertFalse(mount.hasChest(),"Mount gains no vanilla chest inventory");
+            menu.getSlot(36).set(new ItemStack(Items.EMERALD));
+            h.assertTrue(menu.quickMoveStack(player,36).isEmpty(),"Shift-click cannot create cargo storage without bags");
+            h.assertTrue(menu.getSlot(36).getItem().is(Items.EMERALD)&&inventory.getItem(9).isEmpty(),"Rejected cargo stays in the player inventory");
+        }
+        h.succeed();
+    }
+
 }

@@ -18,11 +18,20 @@ public final class MountMenu extends ChestMenu {
     public MountMenu(int id,Inventory inventory,Container container){super(MountContent.MOUNT_MENU.get(),id,inventory,container,mount(container) instanceof net.minecraft.world.entity.animal.horse.Horse?1:4);horse=mount(container);}
     @Override protected Slot addSlot(Slot slot){
         int number=slots.size();int storage=getRowCount()*9;
-        return super.addSlot(new Slot(slot.container,slot.getSlotIndex(),slot.x,slot.y){
-            @Override public boolean mayPlace(ItemStack item){return number>=storage||slot.container.canPlaceItem(slot.getSlotIndex(),item);}
+        boolean equine=getRowCount()==1;
+        boolean hidden=number<9&&(equine?number>3:number!=0&&number!=3&&number!=4);
+        int x,y;
+        if(number<9){x=hidden?-1000:equine?17+number*42:number==0?23:number==4?79:135;y=32;}
+        else if(number<storage){int cargo=number-9;x=8+cargo%9*18;y=72+cargo/9*18;}
+        else{int inventory=number-storage;x=8+inventory%9*18;y=(equine?74:146)+(inventory<27?inventory/9*18:58);}
+        return super.addSlot(new Slot(slot.container,slot.getSlotIndex(),x,y){
+            @Override public boolean isActive(){return !hidden&&(number<9||number>=storage||!getContainer().getItem(4).isEmpty());}
+            @Override public boolean mayPickup(Player player){return isActive()&&super.mayPickup(player);}
+            @Override public boolean mayPlace(ItemStack item){return !hidden&&(number>=storage||slot.container.canPlaceItem(slot.getSlotIndex(),item));}
             @Override public int getMaxStackSize(){return number<9?1:super.getMaxStackSize();}
         });
     }
+
     @Override public void clicked(int slot,int button,ClickType type,Player player){
         if(slot==3&&button==1&&!getContainer().getItem(3).isEmpty()){
             var lantern=getContainer().getItem(3);

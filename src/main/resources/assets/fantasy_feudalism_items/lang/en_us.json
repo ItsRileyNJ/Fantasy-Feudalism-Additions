@@ -93,5 +93,10 @@
   "message.fantasy_feudalism_items.flint_too_worn": "Not enough flint and steel durability for this stack. Refresh fewer torches at a time.",
   "item.fantasy_feudalism_items.glow_oil": "Glow Oil",
   "tooltip.fantasy_feudalism_items.glow_oil": "Lantern fuel with twice the normal light reach.",
-  "tooltip.fantasy_feudalism_items.glow_fueled": "Glow Oil: enhanced illumination"
+  "tooltip.fantasy_feudalism_items.glow_fueled": "Glow Oil: enhanced illumination",
+  "container.fantasy_feudalism_items.armor": "Armor",
+  "container.fantasy_feudalism_items.shoes": "Shoe",
+  "container.fantasy_feudalism_items.saddlebags": "Saddlebags",
+  "container.fantasy_feudalism_items.bag_storage": "Saddlebag Storage",
+  "container.fantasy_feudalism_items.equip_bags": "Equip saddlebags for storage"
 }

@@ -10,6 +10,9 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.api.distmarker.Dist;
 @EventBusSubscriber(modid=FeudalItems.ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class ClientSetup {
+    @SubscribeEvent public static void models(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
+    }
     @SubscribeEvent public static void particles(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event){
         event.registerSpriteSet(com.fantasyfeudalism.items.trophy.TrophyParticles.IDLE.get(),sprites->TrophyAuraParticle.provider(sprites,false));
         event.registerSpriteSet(com.fantasyfeudalism.items.trophy.TrophyParticles.ACTIVE.get(),sprites->TrophyAuraParticle.provider(sprites,true));
@@ -21,7 +24,7 @@ public final class ClientSetup {
         }
     }
     @SubscribeEvent public static void screens(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event){
-        event.<BagMenu,StorageScreen<BagMenu>>register(MountContent.BAG_MENU.get(),(menu,inventory,title)->new StorageScreen<>(menu,inventory,title));event.<MountMenu,StorageScreen<MountMenu>>register(MountContent.MOUNT_MENU.get(),(menu,inventory,title)->new StorageScreen<>(menu,inventory,title));
+        event.<BagMenu,StorageScreen<BagMenu>>register(MountContent.BAG_MENU.get(),(menu,inventory,title)->new StorageScreen<>(menu,inventory,title));event.register(MountContent.MOUNT_MENU.get(),MountScreen::new);
     }
     @SubscribeEvent public static void colors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event){
         event.register((stack,index)->index==0?DyedItemColor.getOrDefault(stack,0x8B5A2B):0xFFFFFF,MountContent.SADDLEBAG.get());

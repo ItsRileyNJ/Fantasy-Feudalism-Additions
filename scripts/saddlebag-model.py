@@ -3,6 +3,7 @@
 from pathlib import Path
 import json, math
 from itertools import product
+from copy import deepcopy
 
 MOD = 'fantasy_feudalism_items'
 PEG = '7b1d31c5-c651-3052-5840-24af49eb1301'
@@ -32,9 +33,11 @@ def generate(root):
             def transform(p):
                 p=rotate(p,cube.get('origin',[0,0,0]),cube.get('rotation',[0,0,0]))
                 for g in reversed(parents):p=rotate(p,g['origin'],g.get('rotation',[0,0,0]))
-                # Blockbench's entity frame faces the opposite X/Z direction;
-                # subtract the supplied Body pivot before attaching to HorseModel.body.
-                return [-(p[i]-body[i])/16 for i in range(3)]
+                # Official Java export: X=-BB.X, Y=24-BB.Y, Z=BB.Z.
+                # Attach to vanilla HorseModel.body at (0,11,5), rather than
+                # pretending the reference Donkey Body pivot is the same.
+                native=[-p[0],24-p[1],p[2]]
+                return [(native[i]-(0,11,5)[i])/16 for i in range(3)]
             points=[transform(p) for p in product(*zip(cube['from'],cube['to']))]
             if node==PEG:
                 # Use the peg's outer/front end, centered vertically and across its width.
@@ -49,7 +52,19 @@ def generate(root):
     walk(source['outliner'],[])
     assert len(parts)==len(cubes) and peg is not None
     model={'parent':'minecraft:block/block','textures':{'leather':'minecraft:block/white_wool','strap':'minecraft:block/brown_terracotta','metal':'minecraft:block/iron_block','particle':'minecraft:block/brown_terracotta'},'display':{'gui':{'rotation':[25,140,0],'scale':[0.75,0.75,0.75]},'ground':{'translation':[0,3,0],'scale':[0.5,0.5,0.5]},'thirdperson_righthand':{'rotation':[0,90,0],'scale':[0.5,0.5,0.5]},'fixed':{'rotation':[0,0,0],'translation':[0,0,0],'scale':[1,1,1]}},'elements':parts}
-    dest=root/f'src/main/resources/assets/{MOD}/models/item/saddlebag.json';dest.write_text(json.dumps(model,indent=2)+'\n')
+    mounted=deepcopy(model);mounted.pop('display')
+    dest=root/f'src/main/resources/assets/{MOD}/models/item/saddlebag_equipped.json';dest.write_text(json.dumps(mounted,indent=2)+'\n')
+    # Inventory/held geometry is centered independently, with uniform scale.
+    low=[min(p['from'][i] for p in parts) for i in range(3)]
+    high=[max(p['to'][i] for p in parts) for i in range(3)]
+    center=[(a+b)/2 for a,b in zip(low,high)];scale=14/max(b-a for a,b in zip(low,high))
+    inventory=deepcopy(model)
+    for part in inventory['elements']:
+        for corner in ('from','to'):part[corner]=[round(8+(n-center[i])*scale,6) for i,n in enumerate(part[corner])]
+    inventory['display']['gui']={'rotation':[25,140,0],'scale':[0.85,0.85,0.85]}
+    inventory['display']['firstperson_righthand']={'rotation':[0,45,0],'translation':[0,0,0],'scale':[0.5,0.5,0.5]}
+    inventory['display']['firstperson_lefthand']={'rotation':[0,225,0],'translation':[0,0,0],'scale':[0.5,0.5,0.5]}
+    dest=root/f'src/main/resources/assets/{MOD}/models/item/saddlebag.json';dest.write_text(json.dumps(inventory,indent=2)+'\n')
     java=root/'src/main/java/com/fantasyfeudalism/items/client/SaddlebagAttachment.java'
     java.write_text('''package com.fantasyfeudalism.items.client;
 /** Generated from the marked side peg in models/Saddlebag.bbmodel. Body-local units. */
