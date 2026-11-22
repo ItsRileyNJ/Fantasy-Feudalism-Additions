@@ -301,15 +301,15 @@ public final class ContentTests {
         var player=h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         for(var type:java.util.List.of(EntityType.DONKEY,EntityType.MULE)){
             var mount=type.create(h.getLevel());mount.setTamed(true);var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
-            h.assertTrue(menu.getSlot(0).x==17&&menu.getSlot(4).x==59&&menu.getSlot(5).x==101&&menu.getSlot(3).x==143,"Separate saddle, saddlebag and lantern equipment positions");
+            h.assertTrue(menu.getSlot(0).x==76&&menu.getSlot(4).x==98&&menu.getSlot(5).x==120&&menu.getSlot(3).x==142,"Separate saddle, saddlebag and lantern equipment positions");
             h.assertTrue(menu.getSlot(0).mayPlace(new ItemStack(Items.SADDLE)),"Saddle belongs in dedicated saddle slot");
             h.assertFalse(menu.getSlot(0).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag cannot replace a saddle");
             h.assertTrue(menu.getSlot(4).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag belongs in its own equipment slot");
             h.assertFalse(menu.getSlot(4).mayPlace(new ItemStack(Items.SADDLE)),"Saddle cannot replace a bag");
             h.assertFalse(menu.getSlot(9).isActive(),"Cargo is disabled without saddlebags");
-            inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));
-            h.assertTrue(menu.getSlot(9).isActive()&&menu.getSlot(9).y==72,"Equipping bag enables a separate cargo grid");
-            h.assertTrue(menu.getSlot(36).y==146,"Player inventory stays below cargo");
+            inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));menu.refreshLayout();
+            h.assertTrue(menu.getSlot(9).isActive()&&menu.getSlot(9).y==82,"Equipping bag enables a separate cargo grid");
+            h.assertTrue(menu.getSlot(36).y==154,"Player inventory stays below cargo");
             inventory.removeItemNoUpdate(4);inventory.setChanged();
             h.assertFalse(menu.getSlot(9).isActive(),"Removing the bag removes cargo access");
             h.assertFalse(menu.getSlot(9).mayPlace(new ItemStack(Items.EMERALD)),"No quick-move or click can store cargo without a bag");
@@ -320,6 +320,26 @@ public final class ContentTests {
             h.assertTrue(menu.getSlot(36).getItem().is(Items.EMERALD)&&inventory.getItem(9).isEmpty(),"Rejected cargo stays in the player inventory");
         }
         h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void mount_layout_reflows_without_changing_slot_identity_or_cargo(GameTestHelper h){
+        var player=player(h);var mount=EntityType.MULE.create(h.getLevel());mount.setTamed(true);
+        var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
+        int count=menu.slots.size();var equipment=menu.getSlot(4);var cargo=menu.getSlot(9);
+        h.assertTrue(menu.panelHeight()==180&&menu.getSlot(36).y==98,"Unfitted mount uses compact inventory");
+        var bag=new ItemStack(MountContent.SADDLEBAG.get());bag.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(List.of(new ItemStack(Items.EMERALD,9))));
+        menu.getSlot(36).set(bag);h.assertFalse(menu.quickMoveStack(player,36).isEmpty(),"Shift-click equips saddlebags");
+        h.assertTrue(menu.hasCargo()&&menu.panelHeight()==236&&menu.getSlot(36).y==154,"Equipping bag expands cargo and moves player slots");
+        h.assertTrue(menu.getSlot(9).getItem().getCount()==9,"Expansion exposes existing bag cargo intact");
+        h.assertTrue(menu.getSlot(4)==equipment&&menu.getSlot(9)==cargo&&menu.slots.size()==count,"Equipment and cargo slots stay stable across reflow");
+        h.assertFalse(menu.quickMoveStack(player,4).isEmpty(),"Shift-click removes bag with cargo");
+        h.assertFalse(menu.hasCargo()||menu.getSlot(9).isActive(),"Removing bag collapses and disables cargo");
+        h.assertTrue(menu.panelHeight()==180&&menu.getSlot(36).y==98,"Player inventory returns to compact position");
+        h.assertTrue(player.getInventory().items.stream().filter(stack->stack.is(MountContent.SADDLEBAG.get())).count()==1,"Exactly one bag remains after reflow");
+        var restored=player.getInventory().items.stream().filter(stack->stack.is(MountContent.SADDLEBAG.get())).findFirst().orElseThrow();
+        h.assertTrue(restored.get(DataComponents.CONTAINER).getStackInSlot(0).getCount()==9,"Removing bag preserves every stored item");
+        for(int i=0;i<menu.slots.size();i++)h.assertTrue(menu.getSlot(i).index==i,"Network slot indices remain stable");h.succeed();
     }
 
 }

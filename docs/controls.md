@@ -1,6 +1,6 @@
 # Controls and recipes
 
-- Shift-right-click a tamed horse, donkey or mule to open its equipment menu. Hover empty slots to see their purpose. Horse equipment uses one row; donkey/mule cargo uses the three rows below it.
+- Shift-right-click a tamed horse, donkey or mule to open its equipment menu. The screen shows your mount, its health, and equipment icons. Hover an empty icon for its purpose and controls; a lock marks slots that require saddlebags. Shift-click to equip or take items. Donkey/mule storage expands when bags are fitted and collapses when removed.
 - In that menu, shift-right-click the lantern slot to toggle it. Right-click the lantern with Kelp Oil on the cursor to refuel it; the glass bottle is returned.
 - Shift-right-click a placed lantern to toggle it. Right-click it with Kelp Oil to refill. Flint and steel relights a torch and resets its fuel, including while it is still lit.
 - Held lanterns toggle with shift-use in the air. Inventory light stacks can be serviced by right-clicking them with oil or flint and steel on the cursor, as appropriate. Flint and steel costs one durability use per torch in the refreshed stack; split the stack if the tool is too worn.

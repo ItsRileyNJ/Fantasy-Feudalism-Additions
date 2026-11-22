@@ -118,5 +118,16 @@
   "tooltip.fantasy_feudalism_items.sleeping_bag": "10-second sleep. Does not set your spawn point.",
   "message.fantasy_feudalism_items.remove_sleeping_bag": "Remove the sleeping bag before removing the saddlebags.",
   "container.fantasy_feudalism_items.bags": "Bags",
-  "container.fantasy_feudalism_items.bedroll": "Bedroll"
+  "container.fantasy_feudalism_items.bedroll": "Bedroll",
+  "container.fantasy_feudalism_items.equipment": "Equipment",
+  "container.fantasy_feudalism_items.mount_health": "Health: %s/%s",
+  "container.fantasy_feudalism_items.horse_armor": "Horse Armor",
+  "container.fantasy_feudalism_items.horseshoe": "Horseshoe",
+  "container.fantasy_feudalism_items.sleeping_bag": "Sleeping Bag",
+  "tooltip.fantasy_feudalism_items.mount.storage": "27 shared storage slots.",
+  "tooltip.fantasy_feudalism_items.mount.requires_bags": "Fit saddlebags to use this slot.",
+  "tooltip.fantasy_feudalism_items.mount.turn_off": "Shift-right-click: turn off.",
+  "tooltip.fantasy_feudalism_items.mount.turn_on": "Shift-right-click: turn on.",
+  "tooltip.fantasy_feudalism_items.mount.refuel": "Right-click with Kelp Oil or Glow Oil to refuel.",
+  "tooltip.fantasy_feudalism_items.mount.shift_click": "Shift-click items to equip or take."
 }

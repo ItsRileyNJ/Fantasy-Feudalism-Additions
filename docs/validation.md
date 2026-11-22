@@ -430,3 +430,13 @@ Validation: full build and shader API checks passed; **80/80 server tests** and 
 - Release JAR: JSON parsed, all sleeping-bag recipes/blockstates matched source, correct 0.1.5 metadata, no GameTest classes or nested third-party JARs.
 
 This update was exercised with the base NeoForge client/server. The full external modpack and shader pack were not rerun for this feature.
+
+
+## Mount inventory redesign — 0.1.6 (2026-11-20)
+
+The mount screen now uses a compact vanilla-style equipment overview with a live mount preview, health, ghost item icons, a locked sleeping-bag slot when bags are absent, and localized hover instructions. The requested storage prompt was removed. Horses use a 168-pixel panel; donkeys/mules use 180 pixels without bags and 236 with all 27 cargo slots. The same open screen expands/collapses as bags are equipped/removed. Equipment/cargo slots retain their identity, and network slot indices remain stable when player slots move.
+
+- Full build: **88 server GameTests passed**, zero failures; shader API detection checks passed.
+- Graphical client: **115 smoke checks passed**, including horse, fitted donkey, unfitted mule, live mule expansion/collapse, equipment restrictions, cargo synchronization and viewport fit at 427×240 GUI resolution. Screenshots cover both cargo states and horses; locked-slot hover text was checked separately.
+- The new server regression equips a filled bag with shift-click, verifies storage/reflow, removes it, checks the stored items and confirms that only one bag remains. Existing sleep, fuel, lighting and other regression checks also pass.
+- Model geometry and texture work remains a separate outstanding task pending the user's texture files. These UI checks use the base NeoForge client/server; the full external modpack was not rerun.

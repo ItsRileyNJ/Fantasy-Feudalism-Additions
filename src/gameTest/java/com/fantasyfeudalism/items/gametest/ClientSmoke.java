@@ -23,12 +23,13 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 @EventBusSubscriber(modid=FeudalItems.ID,value=Dist.CLIENT)
 public final class ClientSmoke {
     private static int phase,ticks;
-    private static volatile UUID horseId,donkeyId;
+    private static volatile UUID horseId,donkeyId,muleId;
     private static final List<String> PASSED=new ArrayList<>();
     private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);PASSED.add(message);}
     private static Entity entity(Minecraft client,UUID id){for(var entity:client.level.entitiesForRendering())if(entity.getUUID().equals(id))return entity;return null;}
     private static int itemLight(ItemStack stack){return com.fantasyfeudalism.items.client.DynamicLighting.itemLight(stack);}
     private static int entityLight(Entity entity){return com.fantasyfeudalism.items.client.DynamicLighting.entityLight(entity);}
+    private static void screenshot(Minecraft client,String name){net.minecraft.client.Screenshot.grab(client.gameDirectory,"mount-ui-"+name+".png",client.getMainRenderTarget(),message->{});}
     private static void report(boolean complete,Throwable error){
         try{var json=new com.google.gson.JsonObject();json.addProperty("complete",complete);json.add("passed",new com.google.gson.Gson().toJsonTree(PASSED));if(error!=null)json.addProperty("error",error.toString());var path=Path.of(System.getProperty("fantasyfeudalism.smokeReport"));Files.createDirectories(path.getParent());Files.writeString(path,new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(json));}catch(Exception exception){exception.printStackTrace();}
     }
@@ -122,13 +123,16 @@ public final class ClientSmoke {
             }
             if(phase==4){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||client.screen==null||menu.getContainer().getItem(3).isEmpty())return;
+                if(ticks<8)return;
+                check(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen&&screen.getYSize()==168,"Horse uses compact equipment screen");
+                screenshot(client,"horse");
                 check(menu.getContainer().getContainerSize()==36&&menu.getContainer().getItem(3).is(Items.LANTERN),"Mount equipment screen opens and synchronizes dedicated lantern slot");
                 client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(donkeyId);player.openMenu(new SimpleMenuProvider((id,inventory,p)->new MountMenu(id,inventory,MountEquipment.inventory(mount)),Component.literal("Donkey Equipment")),buffer->buffer.writeVarInt(mount.getId()));});phase=5;ticks=0;return;
             }
             if(phase==5){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Donkey)||menu.getContainer().getItem(4).isEmpty()||menu.getContainer().getItem(0).isEmpty())return;
-                check(menu.getSlot(0).x==17&&menu.getSlot(4).x==59&&menu.getSlot(5).x==101&&menu.getSlot(3).x==143,"Donkey saddle and bags synchronize in separate equipment slots");
-                check(menu.getSlot(9).y==72&&menu.getSlot(36).y==146,"Donkey cargo and player inventory occupy separate sections");
+                check(menu.getSlot(0).x==76&&menu.getSlot(4).x==98&&menu.getSlot(5).x==120&&menu.getSlot(3).x==142,"Donkey saddle and bags synchronize in separate equipment slots");
+                check(menu.getSlot(9).y==82&&menu.getSlot(36).y==154,"Donkey cargo and player inventory occupy separate sections");
                 var equippedModel=client.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
                 check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==78,"Dedicated equipped saddlebag model is registered and baked");
                 check(MountVisuals.sleepingBag(menu.horse).isEmpty(),"No sleeping bag renders before one is equipped");
@@ -160,7 +164,32 @@ public final class ClientSmoke {
             }
             if(phase==8){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||menu.getContainer().getItem(5).isEmpty())return;
+                if(ticks<8)return;
+                check(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen&&screen.getYSize()==236,"Fitted donkey screen shows all cargo and player inventory");
+                screenshot(client,"donkey-fitted");
                 check(!menu.getSlot(4).mayPickup(client.player)&&menu.getSlot(5).mayPickup(client.player),"Client equipment slots enforce sleeping bag removal first");
+                client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var level=player.serverLevel();var mule=EntityType.MULE.create(level);mule.setPos(-3.5,150,3.5);mule.setTamed(true);mule.setOwnerUUID(player.getUUID());mule.setNoAi(true);level.addFreshEntity(mule);muleId=mule.getUUID();player.closeContainer();player.openMenu(new SimpleMenuProvider((id,inv,p)->new MountMenu(id,inv,MountEquipment.inventory(mule)),Component.literal("Mount Equipment")),buffer->buffer.writeVarInt(mule.getId()));});phase=9;ticks=0;return;
+            }
+            if(phase==9){
+                if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Mule)||menu.hasCargo()||ticks<8)return;
+                if(!(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen)||screen.getYSize()!=180)return;
+                check(menu.getSlot(36).y==98&&!menu.getSlot(9).isActive()&&!menu.getSlot(5).isActive(),"Unfitted mule has compact inventory and locked storage/bedroll");
+                check(screen.getGuiTop()>=0&&screen.getGuiTop()+screen.getYSize()<=client.getWindow().getGuiScaledHeight(),"Compact screen fits the client viewport");
+                screenshot(client,"mule-empty");
+                client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(muleId);var inventory=MountEquipment.inventory(mount);inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));inventory.setItem(9,new ItemStack(Items.EMERALD,7));});phase=10;ticks=0;return;
+            }
+            if(phase==10){
+                if(!(client.player.containerMenu instanceof MountMenu menu)||!menu.hasCargo()||ticks<8)return;
+                if(!(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen)||screen.getYSize()!=236)return;
+                check(menu.getSlot(36).y==154&&menu.getSlot(9).getItem().getCount()==7,"Live bag installation expands the same open screen and syncs cargo");
+                check(screen.getGuiTop()>=0&&screen.getGuiTop()+screen.getYSize()<=client.getWindow().getGuiScaledHeight(),"Expanded screen fits the client viewport");
+                screenshot(client,"mule-expanded");
+                client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(muleId);MountEquipment.inventory(mount).removeItem(4,1);});phase=11;ticks=0;return;
+            }
+            if(phase==11){
+                if(!(client.player.containerMenu instanceof MountMenu menu)||menu.hasCargo()||ticks<8)return;
+                if(!(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen)||screen.getYSize()!=180)return;
+                check(menu.getSlot(36).y==98&&!menu.getSlot(9).isActive(),"Live bag removal collapses the same open screen and disables cargo");
                 report(true,null);phase=-1;
             }
         }catch(Throwable error){error.printStackTrace();report(false,error);phase=-1;}
