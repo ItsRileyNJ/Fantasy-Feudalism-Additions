@@ -440,3 +440,15 @@ The mount screen now uses a compact vanilla-style equipment overview with a live
 - Graphical client: **115 smoke checks passed**, including horse, fitted donkey, unfitted mule, live mule expansion/collapse, equipment restrictions, cargo synchronization and viewport fit at 427×240 GUI resolution. Screenshots cover both cargo states and horses; locked-slot hover text was checked separately.
 - The new server regression equips a filled bag with shift-click, verifies storage/reflow, removes it, checks the stored items and confirms that only one bag remains. Existing sleep, fuel, lighting and other regression checks also pass.
 - Model geometry and texture work remains a separate outstanding task pending the user's texture files. These UI checks use the base NeoForge client/server; the full external modpack was not rerun.
+
+
+## Finished saddlebag textures — 0.1.7 (2026-11-21)
+
+Saddlebags and the crafting half now use a custom 128×128 atlas: stitched chestnut leather, dark leather straps, brass buckles/lantern peg and canvas lining. All 13 permanent cubes and all six faces per cube are textured without dye tint. The original model geometry, group pivots and lantern attachment remain matched against Donkey.java. The optional sleeping bag still uses its separate color-tinted model and slot.
+
+- **88 server tests passed**, including failed dye crafting, removal from the dyeable tag, and migrating old dyed bags without losing the item stored in slot 27. Full build and shader API checks passed.
+- **118 graphical client smoke checks passed**, covering the fixed finish, custom atlas on every face, removal of the dye handler, all seven crafting-half cubes, mounted synchronization, sleeping-bag colors and the redesigned UI. An existing 0.1.6 test world loaded successfully after the dye recipe was removed.
+- Independent model/resource check verifies unchanged geometry/pivots, untinted full/half models, six mapped faces, in-bounds UV coordinates and quarter-turn face rotations. The atlas is a power-of-two texture; the client reported no missing saddlebag textures or mipmap reduction.
+- Native screenshots inspected the equipped leather/stitching/brass finish and inventory models. `models/Saddlebag-textured.bbmodel` contains the finished mappings and an embedded copy of the atlas for editing. The supplied original remains available as the reference.
+
+Textures were authored for this update. The full external modpack and shaders were not rerun; client verification used base NeoForge.

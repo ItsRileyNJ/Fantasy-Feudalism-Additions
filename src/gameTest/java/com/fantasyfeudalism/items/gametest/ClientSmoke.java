@@ -94,7 +94,7 @@ public final class ClientSmoke {
                     level.getEntitiesOfClass(AbstractHorse.class,new net.minecraft.world.phys.AABB(-6,145,-4,6,155,8)).forEach(Entity::discard);
                     player.connection.teleport(0.5,150,0.5,45,12);level.setBlockAndUpdate(new net.minecraft.core.BlockPos(2,149,2),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());level.setBlockAndUpdate(new net.minecraft.core.BlockPos(-2,149,2),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
                     var horse=EntityType.HORSE.create(level);horse.setPos(2.5,150,2.5);horse.setTamed(true);horse.setOwnerUUID(player.getUUID());horse.setNoAi(true);MountEquipment.set(horse,3,new ItemStack(Items.LANTERN));level.addFreshEntity(horse);horseId=horse.getUUID();
-                    var donkey=EntityType.DONKEY.create(level);donkey.setPos(-1.5,150,2.5);donkey.setTamed(true);donkey.getSlot(400).set(new ItemStack(Items.SADDLE));donkey.setNoAi(true);donkey.setYRot(315);donkey.yBodyRot=315;donkey.yHeadRot=315;var bag=DyedItemColor.applyDyes(new ItemStack(MountContent.SADDLEBAG.get()),List.of((DyeItem)Items.RED_DYE));MountEquipment.set(donkey,4,bag);MountEquipment.set(donkey,3,new ItemStack(Items.LANTERN));level.addFreshEntity(donkey);donkeyId=donkey.getUUID();
+                    var donkey=EntityType.DONKEY.create(level);donkey.setPos(-1.5,150,2.5);donkey.setTamed(true);donkey.getSlot(400).set(new ItemStack(Items.SADDLE));donkey.setNoAi(true);donkey.setYRot(315);donkey.yBodyRot=315;donkey.yHeadRot=315;var bag=new ItemStack(MountContent.SADDLEBAG.get());MountEquipment.set(donkey,4,bag);MountEquipment.set(donkey,3,new ItemStack(Items.LANTERN));level.addFreshEntity(donkey);donkeyId=donkey.getUUID();
                 });phase=1;ticks=0;return;
             }
             var horse=horseId==null?null:entity(client,horseId);
@@ -103,11 +103,16 @@ public final class ClientSmoke {
                 var data=horse.getData(ModAttachments.MOUNT);if(!data.contains("Slot3"))return;
                 check(entityLight(horse)==15,"Mounted lantern contributes light through built-in lighting");
                 var donkey=donkeyId==null?null:entity(client,donkeyId);if(donkey==null||!donkey.getData(ModAttachments.MOUNT).contains("Slot4"))return;
-                var bag=ItemStack.parse(client.level.registryAccess(),donkey.getData(ModAttachments.MOUNT).getCompound("Slot4")).orElseThrow();check(bag.has(DataComponents.DYED_COLOR),"Equipped saddlebag dye is synchronized to rendering client");
+                var bag=ItemStack.parse(client.level.registryAccess(),donkey.getData(ModAttachments.MOUNT).getCompound("Slot4")).orElseThrow();check(!bag.has(DataComponents.DYED_COLOR),"Equipped saddlebag uses its fixed leather finish");
                 var bagModel=client.getItemRenderer().getModel(bag,client.level,client.player,0);
                 var quads=bagModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0));
                 check(quads.size()==78,"Supplied saddlebag renders thirteen permanent model pieces without the sleeping bag");
-                check(quads.stream().filter(q->q.isTinted()&&q.getTintIndex()==0).count()==12,"Both bag bodies remain dyeable while fittings keep their color");
+                check(quads.stream().noneMatch(net.minecraft.client.renderer.block.model.BakedQuad::isTinted),"Every saddlebag face uses its finished texture without dye tint");
+                check(quads.stream().allMatch(q->q.getSprite().contents().name().toString().equals(FeudalItems.ID+":item/saddlebag_materials")),"All saddlebag faces use the custom leather and hardware atlas");
+                check(client.getItemColors().getColor(bag,0)==-1,"Saddlebag no longer registers a dye color handler");
+                var half=client.getItemRenderer().getModel(new ItemStack(MountContent.HALF.get()),client.level,client.player,0);
+                var halfQuads=half.getQuads(null,null,net.minecraft.util.RandomSource.create(0));
+                check(halfQuads.size()==42&&halfQuads.stream().noneMatch(net.minecraft.client.renderer.block.model.BakedQuad::isTinted),"Crafting half has the same seven-piece textured model");
                 client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(horseId);var lantern=MountEquipment.item(mount,3);LightItemFuel.set(lantern,100,false);MountEquipment.set(mount,3,lantern);});phase=2;ticks=0;return;
             }
             if(phase==2){

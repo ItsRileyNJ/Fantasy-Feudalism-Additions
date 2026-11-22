@@ -4,7 +4,7 @@
 - In that menu, shift-right-click the lantern slot to toggle it. Right-click the lantern with Kelp Oil on the cursor to refuel it; the glass bottle is returned.
 - Shift-right-click a placed lantern to toggle it. Right-click it with Kelp Oil to refill. Flint and steel relights a torch and resets its fuel, including while it is still lit.
 - Held lanterns toggle with shift-use in the air. Inventory light stacks can be serviced by right-clicking them with oil or flint and steel on the cursor, as appropriate. Flint and steel costs one durability use per torch in the refreshed stack; split the stack if the tool is too worn.
-- Right-click a held saddlebag to open portable storage. Equip it on a donkey or mule to access the same contents there. Dye it in crafting; dye does not change capacity.
+- Right-click a held saddlebag to open portable storage. Equip it on a donkey or mule to access the same contents there. Its leather finish is fixed; dyes cannot recolor it.
 - Craft a sleeping bag from three matching wool above three leather. Place it and use it to sleep for ten seconds without changing spawn. It explodes in the Nether and End.
 - With saddlebags fitted, put a sleeping bag in the donkey/mule’s separate **Bedroll** equipment slot beside the lantern. Remove it before removing the saddlebags. The rear roll appears only while equipped.
 - Use a milk bucket on an empty cauldron, then use three glass bottles to collect the three Vials of Milk. Drink one to completely remove one randomly chosen harmful effect; other effects are unchanged.

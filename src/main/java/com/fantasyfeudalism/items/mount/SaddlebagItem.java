@@ -10,6 +10,10 @@ import net.minecraft.world.level.Level;
 
 public final class SaddlebagItem extends Item {
     public SaddlebagItem(Properties properties) { super(properties.stacksTo(1).component(DataComponents.CONTAINER, ItemContainerContents.EMPTY)); }
+    @Override public void verifyComponentsAfterLoad(ItemStack stack) {
+        // Old dyed bags adopt the fixed leather finish without touching their stored cargo.
+        stack.remove(DataComponents.DYED_COLOR);
+    }
     @Override public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         var stack = player.getItemInHand(hand);
         if (player instanceof net.minecraft.server.level.ServerPlayer server)

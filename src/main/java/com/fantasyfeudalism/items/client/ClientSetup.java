@@ -4,7 +4,6 @@ import com.fantasyfeudalism.items.content.*;
 import com.fantasyfeudalism.items.mount.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.api.distmarker.Dist;
@@ -29,7 +28,6 @@ public final class ClientSetup {
     }
     @SubscribeEvent public static void colors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event){
         for(var item:com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.values())event.register((stack,index)->index==0?(0xFF000000|com.fantasyfeudalism.items.sleep.SleepingBags.color(stack).getTextureDiffuseColor()):-1,item.get());
-        event.register((stack,index)->index==0?DyedItemColor.getOrDefault(stack,0x8B5A2B):0xFFFFFF,MountContent.SADDLEBAG.get());
         event.register((stack,index)->index==0?0xFFDCEFAD:-1,Content.GLOW_OIL.get());
         event.register(Horseshoe::itemColor,MountContent.COPPER.get(),MountContent.IRON.get(),MountContent.GOLD.get(),MountContent.DIAMOND.get(),MountContent.NETHERITE.get());
         event.register(AnimalAllegiance::itemColor,AnimalAllegiance.AWKWARD.get(),AnimalAllegiance.INTERMEDIATE.get(),AnimalAllegiance.NORMAL.get(),AnimalAllegiance.EXTENDED.get());

@@ -58,7 +58,6 @@ public final class FeudalItems {
         com.fantasyfeudalism.items.mount.MountContent.MENUS.register(bus);
         com.fantasyfeudalism.items.mount.SaddlebagLoot.REGISTRY.register(bus);
         com.fantasyfeudalism.items.mount.MountRecipes.init();
-        com.fantasyfeudalism.items.mount.SaddlebagDyeRecipe.init();
         com.fantasyfeudalism.items.content.ModAttachments.TYPES.register(bus);
         NeoForge.EVENT_BUS.addListener(com.fantasyfeudalism.items.mount.MountEquipment::interact);
         NeoForge.EVENT_BUS.addListener(com.fantasyfeudalism.items.mount.MountEquipment::drops);

@@ -37,5 +37,19 @@ def check():
     for axis in range(3):
         low=min(e['from'][axis] for e in inventory['elements']);high=max(e['to'][axis] for e in inventory['elements'])
         assert abs((low+high)/2-8)<1e-5 and high-low<=14.00001
-    print('13 saddlebag cubes + 1 optional sleeping bag match Donkey.java; inventory preserves shape.')
+    half=json.loads((models/'saddlebag_half.json').read_text())
+    assert len(half['elements'])==7
+    for model in (equipped,inventory,half):
+        assert model['textures']['material']=='fantasy_feudalism_items:item/saddlebag_materials'
+        for part in model['elements']:
+            for face in part['faces'].values():
+                assert face['texture']=='#material' and 'tintindex' not in face
+                assert all(0<=c<=16 for c in face['uv'])
+                assert face.get('rotation',0) in (0,90,180,270)
+    original=json.loads((ROOT/'models/Saddlebag.bbmodel').read_text())
+    textured=json.loads((ROOT/'models/Saddlebag-textured.bbmodel').read_text())
+    assert original['groups']==textured['groups'] and original['outliner']==textured['outliner']
+    for source,result in zip(original['elements'],textured['elements']):
+        for key in ('uuid','from','to','origin','rotation'):assert source.get(key)==result.get(key)
+    print('14 original cubes/pivots preserved; full and half bags use complete untinted, in-bounds texture mappings.')
 if __name__=='__main__':check()

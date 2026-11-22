@@ -140,7 +140,15 @@ public final class ContentTests {
         h.assertTrue(restored.get(DataComponents.CONTAINER).getStackInSlot(26).getCount()==7,"Last of twenty-seven slots survives save/load");
         h.assertFalse(SaddlebagItem.allowed(restored),"Filled nested bags rejected");h.assertTrue(SaddlebagItem.allowed(new ItemStack(MountContent.SADDLEBAG.get())),"Empty nested bags allowed");
         var shulker=new ItemStack(Blocks.SHULKER_BOX);h.assertTrue(SaddlebagItem.allowed(shulker),"Empty shulker allowed");shulker.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(List.of(new ItemStack(Items.STONE))));h.assertFalse(SaddlebagItem.allowed(shulker),"Filled shulker rejected");
-        var dyed=DyedItemColor.applyDyes(restored,List.of((DyeItem)Items.RED_DYE));h.assertTrue(dyed.get(DataComponents.CONTAINER).getStackInSlot(26).getCount()==7,"Dyeing preserves inventory");h.assertTrue(dyed.has(DataComponents.DYED_COLOR),"Dye color is stored");h.succeed();
+        restored.set(DataComponents.DYED_COLOR,new DyedItemColor(0xFF0000,true));
+        var migrated=ItemStack.parse(h.getLevel().registryAccess(),restored.save(h.getLevel().registryAccess())).orElseThrow();
+        h.assertFalse(migrated.has(DataComponents.DYED_COLOR),"Legacy dye is removed on load");
+        h.assertTrue(migrated.get(DataComponents.CONTAINER).getStackInSlot(26).getCount()==7,"Legacy dye cleanup preserves stored cargo");
+        h.assertFalse(migrated.is(net.minecraft.tags.ItemTags.DYEABLE),"Saddlebags no longer belong to the dyeable item tag");
+        for(var dye:List.of(Items.RED_DYE,Items.BLUE_DYE,Items.BLACK_DYE)){
+            var input=CraftingInput.of(2,1,List.of(migrated,new ItemStack(dye)));
+            h.assertFalse(h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,input,h.getLevel()).isPresent(),"Dyes cannot recolor saddlebags");
+        }h.succeed();
     }
     @GameTest(template="empty")
     public static void saddlebag_menu_prevents_moving_open_bag(GameTestHelper h){

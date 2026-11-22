@@ -18,11 +18,9 @@ for tier,material in [('copper','copper_ingot'),('iron','iron_ingot'),('gold','g
  shaped(tier+'_horseshoe',['M M','M M','MMM'],{'M':{'item':'minecraft:'+material}},tier+'_horseshoe')
 mod('recipe/netherite_horseshoe.json',{'type':MOD+':netherite_horseshoe'})
 mod('recipe/trophy.json',{'type':MOD+':trophy','category':'misc'})
-mod('recipe/saddlebag_dye.json',{'type':MOD+':saddlebag_dye','category':'misc'})
 mod('recipe/torch_refresh.json',{'type':MOD+':torch_refresh','category':'misc'})
 mod('recipe/kelp_oil.json',{'type':'minecraft:crafting_shapeless','category':'misc','ingredients':[{'item':'minecraft:kelp'},{'item':'minecraft:glass_bottle'}],'result':{'id':MOD+':kelp_oil','count':1}})
 write('data/minecraft/tags/item/swords.json',{'replace':False,'values':[MOD+':bone_dagger']})
-write('data/minecraft/tags/item/dyeable.json',{'replace':False,'values':[MOD+':saddlebag']})
 heads=['zombie_head','skeleton_skull','creeper_head','wither_skeleton_skull','piglin_head','player_head']
 mod('tags/item/sigil_heads.json',{'replace':False,'values':['minecraft:'+h for h in heads]+[MOD+':stray_head',MOD+':bogged_head',MOD+':enderman_head']})
 mod('enchantment/sigil.json',{'description':{'translate':'enchantment.'+MOD+'.sigil'},'supported_items':'#'+MOD+':sigil_heads','primary_items':'#'+MOD+':sigil_heads','weight':1,'max_level':1,'min_cost':{'base':30,'per_level_above_first':0},'max_cost':{'base':100,'per_level_above_first':0},'anvil_cost':1,'slots':['head'],'effects':{}})
@@ -88,7 +86,6 @@ mod('loot_modifiers/saddlebags.json',{'type':MOD+':saddlebags','conditions':[{'c
 for path in (ROOT/f'data/{MOD}/recipe').glob('*.json'):
  recipe=json.loads(path.read_text());name=path.stem
  if name=='torch_refresh':ingredient='minecraft:flint_and_steel'
- elif name=='saddlebag_dye':ingredient=MOD+':saddlebag'
  elif name.endswith('_trophy'):ingredient=MOD+':trophy_mount'
  elif name.endswith('_spawner_eye'):ingredient='minecraft:ender_eye'
  elif name.endswith('_horseshoe'):ingredient='minecraft:'+({'copper':'copper_ingot','iron':'iron_ingot','gold':'gold_ingot','diamond':'diamond','netherite':'netherite_ingot'}[name.split('_')[0]])
