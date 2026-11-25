@@ -115,7 +115,7 @@
   "block.fantasy_feudalism_items.green_sleeping_bag": "Green Bedroll",
   "block.fantasy_feudalism_items.red_sleeping_bag": "Red Bedroll",
   "block.fantasy_feudalism_items.black_sleeping_bag": "Black Bedroll",
-  "tooltip.fantasy_feudalism_items.sleeping_bag": "10-second sleep. Does not set your spawn point.",
+  "tooltip.fantasy_feudalism_items.sleeping_bag": "Does not set your spawn point.",
   "message.fantasy_feudalism_items.remove_sleeping_bag": "Remove the bedroll before removing the saddlebags.",
   "container.fantasy_feudalism_items.bags": "Bags",
   "container.fantasy_feudalism_items.bedroll": "Bedroll",
