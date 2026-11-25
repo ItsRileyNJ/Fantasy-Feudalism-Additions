@@ -47,10 +47,14 @@ public final class ClientSmoke {
                 check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(lights,15,0,0,0)==0,"Dynamic brightness ends at the source radius");
                 check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(lights,5,0,0,0xF000E0)==0xF000E0,"Dynamic illumination preserves brighter block light and sky light");
                 check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(List.of(),0,0,0,0)==0,"Removed sources leave no dynamic illumination");
-                var glowLights=List.of(new com.fantasyfeudalism.items.client.DynamicLighting.Source(0,0,0,30));
+                var glowLantern = new ItemStack(Items.LANTERN);
+                com.fantasyfeudalism.items.lighting.GlowOil.set(glowLantern, true);
+                int glowReach = itemLight(glowLantern);
+                check(glowReach == 25, "Glow Oil lantern has a 25-block light reach");
+                var glowLights = List.of(new com.fantasyfeudalism.items.client.DynamicLighting.Source(0, 0, 0, glowReach));
                 check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(glowLights,0,0,0,0)==240,"Glow Oil clamps at vanilla maximum brightness");
-                check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(glowLights,20,0,0,0)==160,"Glow Oil lights beyond the normal lantern radius");
-                check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(glowLights,30,0,0,0)==0,"Glow Oil has twice the normal light reach");
+                check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(glowLights,24,0,0,0)==16,"Glow Oil lights beyond the normal lantern radius");
+                check(com.fantasyfeudalism.items.client.DynamicLighting.lightAt(glowLights,25,0,0,0)==0,"Glow Oil light ends at 25 blocks");
                 var drop=new net.minecraft.world.entity.item.ItemEntity(client.level,0,0,0,new ItemStack(Items.TORCH));
                 check(entityLight(drop)==14,"Dropped torches emit light without optional mods");
                 var holder=EntityType.HORSE.create(client.level);
