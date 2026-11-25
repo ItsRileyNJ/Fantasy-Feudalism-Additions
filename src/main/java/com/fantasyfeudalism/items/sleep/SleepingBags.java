@@ -5,6 +5,7 @@ import java.util.EnumMap;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.neoforge.registries.*;
 
@@ -12,9 +13,15 @@ public final class SleepingBags {
     public static final int SLEEP_TICKS=200;
     public static final EnumMap<DyeColor,DeferredBlock<SleepingBagBlock>> BLOCKS=new EnumMap<>(DyeColor.class);
     public static final EnumMap<DyeColor,DeferredItem<BedItem>> ITEMS=new EnumMap<>(DyeColor.class);
+    private static final SoundType BED_SOUNDS = Blocks.WHITE_BED.defaultBlockState().getSoundType();
+    private static final SoundType SLEEPING_BAG_SOUNDS = new SoundType(
+            BED_SOUNDS.getVolume(), BED_SOUNDS.getPitch(), SoundType.WOOL.getBreakSound(),
+            BED_SOUNDS.getStepSound(), BED_SOUNDS.getPlaceSound(), BED_SOUNDS.getHitSound(), BED_SOUNDS.getFallSound());
+
     static{for(var color:DyeColor.values()){
         String id=color.getName()+"_sleeping_bag";
-        var block=Content.BLOCKS.register(id,()->new SleepingBagBlock(color,BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_BED).mapColor(color)));
+        var block = Content.BLOCKS.register(id, () -> new SleepingBagBlock(color,
+                BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_BED).mapColor(color).sound(SLEEPING_BAG_SOUNDS)));
         BLOCKS.put(color,block);
         ITEMS.put(color,Content.ITEMS.register(id,()->new BedItem(block.get(),new Item.Properties().stacksTo(1)){
             @Override public void appendHoverText(ItemStack stack,TooltipContext context,java.util.List<net.minecraft.network.chat.Component> lines,TooltipFlag flag){
