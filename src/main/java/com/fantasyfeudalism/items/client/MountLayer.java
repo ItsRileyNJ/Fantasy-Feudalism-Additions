@@ -1,16 +1,30 @@
 package com.fantasyfeudalism.items.client;
-import com.fantasyfeudalism.items.content.ModAttachments;
+import com.fantasyfeudalism.items.FeudalItems;
+import com.fantasyfeudalism.items.sleep.SleepingBags;
+import java.util.EnumMap;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HorseModel;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.item.*;
 public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> extends RenderLayer<T,M> {
     public static final net.minecraft.client.resources.model.ModelResourceLocation SADDLEBAG_MODEL=net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("fantasy_feudalism_items","item/saddlebag_equipped"));
-    public static final net.minecraft.client.resources.model.ModelResourceLocation SLEEPING_BAG_MODEL=net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("fantasy_feudalism_items","item/sleeping_bag_equipped"));
+    private static final EnumMap<DyeColor, ModelResourceLocation> SLEEPING_BAG_MODELS = new EnumMap<>(DyeColor.class);
+    static {
+        for (var color : DyeColor.values()) {
+            var location = ResourceLocation.fromNamespaceAndPath(FeudalItems.ID, "item/" + color.getName() + "_sleeping_bag_equipped");
+            SLEEPING_BAG_MODELS.put(color, ModelResourceLocation.standalone(location));
+        }
+    }
+
+    public static ModelResourceLocation sleepingBagModel(DyeColor color) {
+        return SLEEPING_BAG_MODELS.get(color);
+    }
     public MountLayer(RenderLayerParent<T,M> parent){super(parent);}
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,T horse,float swing,float amplitude,float partial,float age,float yaw,float pitch){
         if(horse instanceof net.minecraft.world.entity.animal.horse.Horse)return;
@@ -26,9 +40,9 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
             pose.popPose();
         }
         var sleepingBag=com.fantasyfeudalism.items.mount.MountVisuals.sleepingBag(horse);
-        if(!bag.isEmpty()&&!sleepingBag.isEmpty()){
+        if (!bag.isEmpty() && SleepingBags.isSleepingBag(sleepingBag)) {
             pose.pushPose();pose.scale(1,-1,-1);
-            var model=Minecraft.getInstance().getModelManager().getModel(SLEEPING_BAG_MODEL);
+            var model=Minecraft.getInstance().getModelManager().getModel(sleepingBagModel(SleepingBags.color(sleepingBag)));
             Minecraft.getInstance().getItemRenderer().render(sleepingBag,ItemDisplayContext.NONE,false,pose,buffers,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,model);
             pose.popPose();
         }

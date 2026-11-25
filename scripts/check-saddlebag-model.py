@@ -22,13 +22,19 @@ def check():
                                     for u,v,t in product((a,a+w),(b,b+h),(d,d+depth))]))
     models=ROOT/'src/main/resources/assets/fantasy_feudalism_items/models/item'
     equipped=json.loads((models/'saddlebag_equipped.json').read_text());roll=json.loads((models/'sleeping_bag_equipped.json').read_text());actual=[]
-    for e in equipped['elements']+roll['elements']:
+    for e in equipped['elements']+roll['elements'][:1]:
         # Undo ItemRenderer centering/entity Y/Z flip and apply the native body pivot.
         actual.append(bounds([(p[0]-8,11-(p[1]-8),5-(p[2]-8)) for p in product(*zip(e['from'],e['to']))]))
     assert len(actual)==len(expected)==14
     assert Counter(actual)==Counter(expected),'Mounted geometry differs from the supplied Java reference'
     inventory=json.loads((models/'saddlebag.json').read_text())
-    assert len(inventory['elements'])==len(equipped['elements'])==13 and len(roll['elements'])==1
+    assert len(inventory['elements'])==len(equipped['elements'])==13 and len(roll['elements'])==11
+    assert roll['textures']['leather']==equipped['textures']['material']
+    for offset in (1, 6):
+        strap, *buckle = roll['elements'][offset:offset+5]
+        assert set(strap['faces']) == {'north', 'south', 'east', 'west'}
+        assert all(face['texture']=='#leather' for face in strap['faces'].values())
+        assert all('west' in bar['faces'] for bar in buckle)
     ratios=[]
     for source,icon in zip(equipped['elements'],inventory['elements']):
         assert set(source['faces'])==set(icon['faces'])=={'north','south','east','west','up','down'}

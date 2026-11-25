@@ -142,17 +142,28 @@ public final class ClientSmoke {
                 var equippedModel=client.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
                 check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==78,"Dedicated equipped saddlebag model is registered and baked");
                 check(MountVisuals.sleepingBag(menu.horse).isEmpty(),"No sleeping bag renders before one is equipped");
-                var rollModel=client.getModelManager().getModel(com.fantasyfeudalism.items.client.MountLayer.SLEEPING_BAG_MODEL);
-                check(rollModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==6,"Rear sleeping bag is a separate six-face model");
                 for(var color:DyeColor.values()){
+                    var texture = FeudalItems.ID + ":block/sleeping_bag/" + color.getName();
+                    var rollModel = client.getModelManager().getModel(com.fantasyfeudalism.items.client.MountLayer.sleepingBagModel(color));
+                    var quads = rollModel.getQuads(null, null, net.minecraft.util.RandomSource.create(0));
+                    check(rollModel != client.getModelManager().getMissingModel()
+                            && quads.size() == 54
+                            && quads.stream().noneMatch(net.minecraft.client.renderer.block.model.BakedQuad::isTinted)
+                            && quads.stream().filter(q -> q.getSprite().contents().name().toString().equals(texture)).count() == 46,
+                            "Mounted sleeping bag bakes dyed fabric, two straps, and two buckles: " + color.getName());
                     var roll=new ItemStack(com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.get(color).get());
                     var model=client.getItemRenderer().getModel(roll,client.level,client.player,0);
-                    check(model!=client.getModelManager().getMissingModel()&&model.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==6,"Sleeping bag item model baked: "+color.getName());
-                    check(client.getItemColors().getColor(roll,0)==(0xFF000000|color.getTextureDiffuseColor()),"Sleeping bag tint matches: "+color.getName());
+                    check(model != client.getModelManager().getMissingModel()
+                            && model.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size() == 6
+                            && model.getParticleIcon().contents().name().toString().equals(texture),
+                            "Sleeping bag item uses its own texture: " + color.getName());
                     var block=com.fantasyfeudalism.items.sleep.SleepingBags.BLOCKS.get(color).get();
                     for(var part:net.minecraft.world.level.block.state.properties.BedPart.values()){
                         var state=block.defaultBlockState().setValue(net.minecraft.world.level.block.BedBlock.PART,part);
-                        check(client.getBlockRenderer().getBlockModel(state)!=client.getModelManager().getMissingModel(),"Floor sleeping bag model baked: "+color.getName()+" "+part);
+                        var floorModel = client.getBlockRenderer().getBlockModel(state);
+                        check(floorModel != client.getModelManager().getMissingModel()
+                                && floorModel.getParticleIcon().contents().name().toString().equals(texture),
+                                "Floor sleeping bag uses its own texture: " + color.getName() + " " + part);
                     }
                 }
                 client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(donkeyId);MountEquipment.set(mount,5,new ItemStack(com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.get(DyeColor.BLUE).get()));});phase=6;ticks=0;return;

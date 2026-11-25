@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bake the supplied entity-model groups into one body-attached saddlebag model."""
 from pathlib import Path
-import base64, json, math
+import base64, json, math, runpy
 from itertools import product
 from copy import deepcopy
 
@@ -28,6 +28,37 @@ def rotate(point, origin, angles):
         a,b = [(1,2),(2,0),(0,1)][axis]
         p[a],p[b] = c*p[a]-s*p[b],s*p[a]+c*p[b]
     return [a+b for a,b in zip(p,origin)]
+
+def mounted_roll(start, end):
+    sleeping_bag = runpy.run_path(str(Path(__file__).with_name('sleeping-bag-resources.py')))
+    fabric = sleeping_bag['roll'](start, end)
+    cube = sleeping_bag['cube']
+    elements = [fabric]
+    x, y, z = start
+    for offset in (2, 8):
+        strap_y = y + offset
+        low = [x - 0.125, strap_y, z - 0.125]
+        high = [end[0] + 0.125, strap_y + 1, end[2] + 0.125]
+        size = [b - a for a, b in zip(low, high)]
+        faces = {side: {'texture': '#leather', 'uv': face_uv('strap', side, size)}
+                 for side in ('north', 'south', 'east', 'west')}
+        elements.append({'from': low, 'to': high, 'faces': faces})
+        # Four narrow bars give each silver buckle an open center over the strap.
+        buckle_y, buckle_z = strap_y - 0.5, z + 0.5
+        u, v = sleeping_bag['BUCKLE']
+        rim = 0.375
+        bars = [(0, 0, rim, 2), (2 - rim, 0, 2, 2),
+                (rim, 0, 2 - rim, rim), (rim, 2 - rim, 2 - rim, 2)]
+        for left, bottom, right, top in bars:
+            origins = {side: (u, v) for side in NORMALS if side != 'east'}
+            origins['west'] = (u + left, v + 2 - top)
+            elements.append(cube(
+                [x - 0.25, buckle_y + bottom, buckle_z + left],
+                [x - 0.125, buckle_y + top, buckle_z + right],
+                origins,
+            ))
+    return elements
+
 
 def generate(root):
     root=Path(root);source=json.loads((root/'models/Saddlebag.bbmodel').read_text())
@@ -75,7 +106,7 @@ def generate(root):
             if node!=ROLL:
                 textured_cubes[node].update(box_uv=False,mirror_uv=False,faces=bbfaces)
             if node==ROLL:
-                roll.append({'from':bounds[0],'to':bounds[1],'faces':{side:{'texture':'#fabric','uv':[0,0,16,16],'tintindex':0} for side in NORMALS}})
+                roll.append(bounds)
             else:
                 part={'from':bounds[0],'to':bounds[1],'faces':faces};parts.append(part)
                 if any(g['name']=='BagL' for g in parents):left.append(part)
@@ -83,7 +114,11 @@ def generate(root):
     assert len(parts)+len(roll)==len(cubes) and len(roll)==1 and peg is not None
     texture=MOD+':item/saddlebag_materials'
     model={'parent':'minecraft:block/block','textures':{'material':texture,'particle':texture},'display':{'gui':{'rotation':[25,140,0],'scale':[0.75,0.75,0.75]},'ground':{'translation':[0,3,0],'scale':[0.5,0.5,0.5]},'thirdperson_righthand':{'rotation':[0,90,0],'scale':[0.5,0.5,0.5]},'fixed':{'rotation':[0,0,0],'translation':[0,0,0],'scale':[1,1,1]}},'elements':parts}
-    sleeping_model={'parent':'minecraft:block/block','textures':{'fabric':'minecraft:block/white_wool','particle':'minecraft:block/white_wool'},'elements':roll}
+    sleeping_model = {
+        'parent': 'minecraft:block/block',
+        'textures': {'leather': texture, 'particle': '#fabric'},
+        'elements': mounted_roll(*roll[0]),
+    }
     (root/f'src/main/resources/assets/{MOD}/models/item/sleeping_bag_equipped.json').write_text(json.dumps(sleeping_model,indent=2)+'\n')
     mounted=deepcopy(model);mounted.pop('display')
     dest=root/f'src/main/resources/assets/{MOD}/models/item/saddlebag_equipped.json';dest.write_text(json.dumps(mounted,indent=2)+'\n')
@@ -109,7 +144,7 @@ def generate(root):
     png=(root/f'src/main/resources/assets/{MOD}/textures/item/saddlebag_materials.png').read_bytes()
     textured['meta']['box_uv']=False;textured['resolution']={'width':16,'height':16}
     textured['textures']=[{'name':'saddlebag_materials.png','id':'0','uuid':'c3487d30-bda6-4c42-9270-bd5f85e3ab25','width':16,'height':16,'uv_width':16,'uv_height':16,'render_mode':'default','render_sides':'auto','visible':True,'source':'data:image/png;base64,'+base64.b64encode(png).decode()}]
-    # The optional sleeping bag retains its separate color-tinted runtime model.
+    # This source copy previews the saddlebag atlas. The optional roll has its own runtime model.
     textured_cubes[ROLL].update(box_uv=False,mirror_uv=False,faces={side:{'uv':[8,8,16,16],'texture':0} for side in NORMALS})
     (root/'models/Saddlebag-textured.bbmodel').write_text(json.dumps(textured,indent=2)+'\n')
     java=root/'src/main/java/com/fantasyfeudalism/items/client/SaddlebagAttachment.java'
