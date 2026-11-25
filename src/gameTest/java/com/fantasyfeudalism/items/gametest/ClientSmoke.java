@@ -22,7 +22,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 /** Development-only checks against the supplied binary mods, never packaged in the release. */
 @EventBusSubscriber(modid=FeudalItems.ID,value=Dist.CLIENT)
 public final class ClientSmoke {
-    private static int phase,ticks;
+    private static int phase,ticks,hoofIndex;
     private static volatile UUID horseId,donkeyId,muleId;
     private static final List<String> PASSED=new ArrayList<>();
     private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);PASSED.add(message);}
@@ -93,15 +93,15 @@ public final class ClientSmoke {
                     for(int x=-6;x<=6;x++)for(int z=-4;z<=8;z++)level.setBlockAndUpdate(new net.minecraft.core.BlockPos(x,149,z),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
                     level.getEntitiesOfClass(AbstractHorse.class,new net.minecraft.world.phys.AABB(-6,145,-4,6,155,8)).forEach(Entity::discard);
                     player.connection.teleport(0.5,150,0.5,45,12);level.setBlockAndUpdate(new net.minecraft.core.BlockPos(2,149,2),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());level.setBlockAndUpdate(new net.minecraft.core.BlockPos(-2,149,2),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
-                    var horse=EntityType.HORSE.create(level);horse.setPos(2.5,150,2.5);horse.setTamed(true);horse.setOwnerUUID(player.getUUID());horse.setNoAi(true);MountEquipment.set(horse,3,new ItemStack(Items.LANTERN));level.addFreshEntity(horse);horseId=horse.getUUID();
+                    var horse=EntityType.HORSE.create(level);horse.setPos(2.5,150,2.5);horse.setTamed(true);horse.setOwnerUUID(player.getUUID());horse.setNoAi(true);MountEquipment.set(horse,2,new ItemStack(MountContent.GOLD.get()));level.addFreshEntity(horse);horseId=horse.getUUID();
                     var donkey=EntityType.DONKEY.create(level);donkey.setPos(-1.5,150,2.5);donkey.setTamed(true);donkey.getSlot(400).set(new ItemStack(Items.SADDLE));donkey.setNoAi(true);donkey.setYRot(315);donkey.yBodyRot=315;donkey.yHeadRot=315;var bag=new ItemStack(MountContent.SADDLEBAG.get());MountEquipment.set(donkey,4,bag);MountEquipment.set(donkey,3,new ItemStack(Items.LANTERN));level.addFreshEntity(donkey);donkeyId=donkey.getUUID();
                 });phase=1;ticks=0;return;
             }
             var horse=horseId==null?null:entity(client,horseId);
             if(horse==null)return;
             if(phase==1){
-                var data=horse.getData(ModAttachments.MOUNT);if(!data.contains("Slot3"))return;
-                check(entityLight(horse)==15,"Mounted lantern contributes light through built-in lighting");
+                var litMount=donkeyId==null?null:entity(client,donkeyId);if(litMount==null)return;var data=litMount.getData(ModAttachments.MOUNT);if(!data.contains("Slot3"))return;
+                check(entityLight(litMount)==15,"Mounted lantern contributes light through built-in lighting");
                 var donkey=donkeyId==null?null:entity(client,donkeyId);if(donkey==null||!donkey.getData(ModAttachments.MOUNT).contains("Slot4"))return;
                 var bag=ItemStack.parse(client.level.registryAccess(),donkey.getData(ModAttachments.MOUNT).getCompound("Slot4")).orElseThrow();check(!bag.has(DataComponents.DYED_COLOR),"Equipped saddlebag uses its fixed leather finish");
                 var bagModel=client.getItemRenderer().getModel(bag,client.level,client.player,0);
@@ -113,11 +113,11 @@ public final class ClientSmoke {
                 var half=client.getItemRenderer().getModel(new ItemStack(MountContent.HALF.get()),client.level,client.player,0);
                 var halfQuads=half.getQuads(null,null,net.minecraft.util.RandomSource.create(0));
                 check(halfQuads.size()==42&&halfQuads.stream().noneMatch(net.minecraft.client.renderer.block.model.BakedQuad::isTinted),"Crafting half has the same seven-piece textured model");
-                client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(horseId);var lantern=MountEquipment.item(mount,3);LightItemFuel.set(lantern,100,false);MountEquipment.set(mount,3,lantern);});phase=2;ticks=0;return;
+                client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(donkeyId);var lantern=MountEquipment.item(mount,3);LightItemFuel.set(lantern,100,false);MountEquipment.set(mount,3,lantern);});phase=2;ticks=0;return;
             }
             if(phase==2){
-                var lamp=ItemStack.parse(client.level.registryAccess(),horse.getData(ModAttachments.MOUNT).getCompound("Slot3")).orElse(ItemStack.EMPTY);if(LightItemFuel.lit(lamp))return;
-                check(entityLight(horse)==0,"Switching mounted lantern off removes dynamic light");
+                var lamp=ItemStack.parse(client.level.registryAccess(),entity(client,donkeyId).getData(ModAttachments.MOUNT).getCompound("Slot3")).orElse(ItemStack.EMPTY);if(LightItemFuel.lit(lamp))return;
+                check(entityLight(entity(client,donkeyId))==0,"Switching mounted lantern off removes dynamic light");
                 client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var bag=new ItemStack(MountContent.SADDLEBAG.get());bag.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(List.of(new ItemStack(Items.EMERALD,3))));player.setItemSlot(EquipmentSlot.MAINHAND,bag);player.openMenu(new SimpleMenuProvider((id,inventory,p)->new BagMenu(id,inventory,bag),Component.literal("Saddlebag smoke test")));});phase=3;ticks=0;return;
             }
             if(phase==3){
@@ -127,16 +127,17 @@ public final class ClientSmoke {
                 client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(horseId);player.openMenu(new SimpleMenuProvider((id,inventory,p)->new MountMenu(id,inventory,MountEquipment.inventory(mount)),Component.literal("Mount equipment")),buffer->buffer.writeVarInt(mount.getId()));});phase=4;ticks=0;return;
             }
             if(phase==4){
-                if(!(client.player.containerMenu instanceof MountMenu menu)||client.screen==null||menu.getContainer().getItem(3).isEmpty())return;
+                if(!(client.player.containerMenu instanceof MountMenu menu)||client.screen==null )return;
                 if(ticks<8)return;
                 check(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen&&screen.getYSize()==168,"Horse uses compact equipment screen");
                 screenshot(client,"horse");
-                check(menu.getContainer().getContainerSize()==36&&menu.getContainer().getItem(3).is(Items.LANTERN),"Mount equipment screen opens and synchronizes dedicated lantern slot");
+                check(menu.getContainer().getContainerSize()==36&&!menu.getSlot(3).isActive()&&!menu.getSlot(3).mayPlace(new ItemStack(Items.LANTERN)),"Horse equipment screen has no lantern slot");
                 client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(donkeyId);player.openMenu(new SimpleMenuProvider((id,inventory,p)->new MountMenu(id,inventory,MountEquipment.inventory(mount)),Component.literal("Donkey Equipment")),buffer->buffer.writeVarInt(mount.getId()));});phase=5;ticks=0;return;
             }
             if(phase==5){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Donkey)||menu.getContainer().getItem(4).isEmpty()||menu.getContainer().getItem(0).isEmpty())return;
-                check(menu.getSlot(0).x==76&&menu.getSlot(4).x==98&&menu.getSlot(5).x==120&&menu.getSlot(3).x==142,"Donkey saddle and bags synchronize in separate equipment slots");
+                if(ticks<8)return;menu.refreshLayout();
+                check(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110&&menu.getSlot(5).x==130&&menu.getSlot(3).x==150,"Donkey saddle and bags synchronize in separate equipment slots");
                 check(menu.getSlot(9).y==82&&menu.getSlot(36).y==154,"Donkey cargo and player inventory occupy separate sections");
                 var equippedModel=client.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
                 check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==78,"Dedicated equipped saddlebag model is registered and baked");
@@ -195,6 +196,18 @@ public final class ClientSmoke {
                 if(!(client.player.containerMenu instanceof MountMenu menu)||menu.hasCargo()||ticks<8)return;
                 if(!(client.screen instanceof com.fantasyfeudalism.items.client.MountScreen screen)||screen.getYSize()!=180)return;
                 check(menu.getSlot(36).y==98&&!menu.getSlot(9).isActive(),"Live bag removal collapses the same open screen and disables cargo");
+                hoofIndex=0;client.getSingleplayerServer().execute(()->{var player=client.getSingleplayerServer().getPlayerList().getPlayer(client.player.getUUID());var mount=(AbstractHorse)player.serverLevel().getEntity(horseId);var inv=MountEquipment.inventory(mount);inv.setItem(2,new ItemStack(MountContent.COPPER.get()));player.closeContainer();player.openMenu(new SimpleMenuProvider((id,inventory,p)->new MountMenu(id,inventory,inv),Component.literal("Horse")),buffer->buffer.writeVarInt(mount.getId()));});phase=12;ticks=0;return;
+            }
+            if(phase==12){
+                var shoes=List.of(MountContent.COPPER.get(),MountContent.IRON.get(),MountContent.GOLD.get(),MountContent.DIAMOND.get(),MountContent.NETHERITE.get());
+                if(!(client.player.containerMenu instanceof MountMenu menu)||menu.horse!=horse||ticks<8||!MountVisuals.shoe(horse).is(shoes.get(hoofIndex)))return;
+                check(Horseshoe.itemColor(MountVisuals.shoe(horse),0)==Horseshoe.itemColor(new ItemStack(shoes.get(hoofIndex)),0),"Hoof material synchronizes: "+hoofIndex);
+                screenshot(client,"hoof-"+hoofIndex);hoofIndex++;
+                client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(horseId);MountEquipment.inventory(mount).setItem(2,hoofIndex<5?new ItemStack(shoes.get(hoofIndex)):ItemStack.EMPTY);});ticks=0;if(hoofIndex==5)phase=13;return;
+            }
+            if(phase==13){
+                if(!MountVisuals.shoe(horse).isEmpty()||ticks<8)return;
+                check(MountVisuals.shoe(horse).isEmpty(),"Removing horseshoe restores original hoof appearance");screenshot(client,"hoof-none");
                 report(true,null);phase=-1;
             }
         }catch(Throwable error){error.printStackTrace();report(false,error);phase=-1;}

@@ -175,7 +175,7 @@ public final class ContentTests {
         h.assertTrue(donkey.isSaddled(),"Saddle remains independent");h.assertTrue(MountEquipment.item(donkey,3).is(Items.LANTERN),"Lantern remains independent");
         var removed=inventory.removeItem(4,1);inventory.setChanged();h.assertTrue(removed.get(DataComponents.CONTAINER).getStackInSlot(0).getCount()==13,"Removed bag preserves entire cargo");
         h.assertTrue(inventory.getItem(9).isEmpty(),"Removing bag removes access to its cargo");h.assertTrue(inventory.getItem(0).is(Items.SADDLE)&&inventory.getItem(3).is(Items.LANTERN),"Bag removal leaves other equipment unchanged");
-        h.assertFalse(inventory.canPlaceItem(2,new ItemStack(MountContent.IRON.get())),"Donkeys do not get horseshoe slot");h.succeed();
+        h.assertTrue(inventory.canPlaceItem(2,new ItemStack(MountContent.IRON.get())),"Donkeys have a separate horseshoe slot");h.succeed();
     }
     @GameTest(template="empty")
     public static void two_item_netherite_smithing(GameTestHelper h){
@@ -270,7 +270,7 @@ public final class ContentTests {
     }
     @GameTest(template="empty")
     public static void mounted_fuel_uses_world_clock_not_mount_age(GameTestHelper h){
-        var horse=EntityType.HORSE.create(h.getLevel());horse.setPos(Vec3.atCenterOf(h.absolutePos(new BlockPos(2,2,2))));horse.tickCount=7;
+        var horse=EntityType.DONKEY.create(h.getLevel());horse.setPos(Vec3.atCenterOf(h.absolutePos(new BlockPos(2,2,2))));horse.tickCount=7;
         var lantern=new ItemStack(Items.LANTERN);LightItemFuel.set(lantern,100,true);MountEquipment.set(horse,3,lantern);
         h.succeedWhen(()->{
             h.assertTrue(h.getLevel().getGameTime()%20==0,"Wait for the fuel clock boundary");
@@ -293,7 +293,7 @@ public final class ContentTests {
     }
     @GameTest(template="empty")
     public static void mount_visuals_sync_only_when_appearance_changes(GameTestHelper h){
-        var horse=EntityType.HORSE.create(h.getLevel());var lamp=new ItemStack(Items.LANTERN);LightItemFuel.set(lamp,100,true);MountEquipment.set(horse,3,lamp);
+        var horse=EntityType.DONKEY.create(h.getLevel());var lamp=new ItemStack(Items.LANTERN);LightItemFuel.set(lamp,100,true);MountEquipment.set(horse,3,lamp);
         var data=horse.getData(com.fantasyfeudalism.items.content.ModAttachments.MOUNT);var decoded=MountVisuals.lantern(horse);
         LightItemFuel.set(lamp,80,true);MountEquipment.set(horse,3,lamp);
         h.assertTrue(data==horse.getData(com.fantasyfeudalism.items.content.ModAttachments.MOUNT),"Timer-only updates do not resend mount visuals");
@@ -309,7 +309,7 @@ public final class ContentTests {
         var player=h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         for(var type:java.util.List.of(EntityType.DONKEY,EntityType.MULE)){
             var mount=type.create(h.getLevel());mount.setTamed(true);var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
-            h.assertTrue(menu.getSlot(0).x==76&&menu.getSlot(4).x==98&&menu.getSlot(5).x==120&&menu.getSlot(3).x==142,"Separate saddle, saddlebag and lantern equipment positions");
+            h.assertTrue(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110&&menu.getSlot(5).x==130&&menu.getSlot(3).x==150,"Separate saddle, saddlebag and lantern equipment positions");
             h.assertTrue(menu.getSlot(0).mayPlace(new ItemStack(Items.SADDLE)),"Saddle belongs in dedicated saddle slot");
             h.assertFalse(menu.getSlot(0).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag cannot replace a saddle");
             h.assertTrue(menu.getSlot(4).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag belongs in its own equipment slot");
@@ -348,6 +348,35 @@ public final class ContentTests {
         var restored=player.getInventory().items.stream().filter(stack->stack.is(MountContent.SADDLEBAG.get())).findFirst().orElseThrow();
         h.assertTrue(restored.get(DataComponents.CONTAINER).getStackInSlot(0).getCount()==9,"Removing bag preserves every stored item");
         for(int i=0;i<menu.slots.size();i++)h.assertTrue(menu.getSlot(i).index==i,"Network slot indices remain stable");h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void horses_reject_lanterns_and_return_legacy_equipment(GameTestHelper h){
+        var horse=h.spawnWithNoFreeWill(EntityType.HORSE,2,2,2);horse.setTamed(true);
+        var player=player(h);var menu=new MountMenu(1,player.getInventory(),new MountInventory(horse));
+        h.assertFalse(menu.getSlot(3).isActive()||menu.getSlot(3).mayPlace(new ItemStack(Items.LANTERN)),"Horse lantern slot is hidden and rejects equipment");
+        var old=new ItemStack(Items.LANTERN);LightItemFuel.setStage(old,1,false);MountEquipment.set(horse,3,old);
+        MountEquipment.join(new net.neoforged.neoforge.event.entity.EntityJoinLevelEvent(horse,h.getLevel()));
+        h.assertTrue(MountEquipment.item(horse,3).isEmpty(),"Legacy horse slot is cleared");
+        var drops=h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,horse.getBoundingBox().inflate(2),e->e.getItem().is(Items.LANTERN));
+        h.assertTrue(drops.size()==1&&LightItemFuel.stage(drops.getFirst().getItem())==1&&!LightItemFuel.lit(drops.getFirst().getItem()),"Legacy lantern is returned with fuel intact");
+        MountEquipment.join(new net.neoforged.neoforge.event.entity.EntityJoinLevelEvent(horse,h.getLevel()));
+        h.assertTrue(h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,horse.getBoundingBox().inflate(2),e->e.getItem().is(Items.LANTERN)).size()==1,"Migration cannot duplicate the lantern");h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void donkey_and_mule_horseshoes_apply_half_bonuses(GameTestHelper h){
+        for(var type:List.of(EntityType.DONKEY,EntityType.MULE)){
+            var mount=type.create(h.getLevel());double speed=mount.getAttributeValue(Attributes.MOVEMENT_SPEED);
+            mount.jumpFromGround();double natural=mount.getDeltaMovement().y;
+            var inv=new MountInventory(mount);inv.setItem(2,new ItemStack(MountContent.GOLD.get()));MountEquipment.apply(mount);mount.jumpFromGround();
+            h.assertTrue(Math.abs(mount.getAttributeValue(Attributes.MOVEMENT_SPEED)-speed*1.055)<.00001,"Gold grants half the horse speed bonus");
+            h.assertTrue(Math.abs(MountEquipment.jumpHeight(mount.getDeltaMovement().y)/MountEquipment.jumpHeight(natural)-1.05)<.00001,"Gold grants five percent actual jump height");
+            var damage=new net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent(mount,new net.neoforged.neoforge.common.damagesource.DamageContainer(h.getLevel().damageSources().fall(),10));MountEquipment.damage(damage);
+            h.assertTrue(Math.abs(damage.getAmount()-8.25)<.0001,"Gold grants 17.5 percent fall reduction");
+            h.assertTrue(MountVisuals.shoe(mount).is(MountContent.GOLD.get()),"Material synchronizes for hoof rendering");
+            inv.removeItem(2,1);inv.setChanged();h.assertTrue(Math.abs(mount.getAttributeValue(Attributes.MOVEMENT_SPEED)-speed)<.00001&&MountVisuals.shoe(mount).isEmpty(),"Removing shoe clears bonuses and hoof material");
+        }h.succeed();
     }
 
 }

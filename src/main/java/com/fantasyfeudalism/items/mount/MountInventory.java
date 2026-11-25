@@ -30,8 +30,8 @@ public final class MountInventory extends SimpleContainer {
         return switch(slot) {
             case 0->item.is(Items.SADDLE);
             case 1->horse instanceof Horse && item.getItem() instanceof AnimalArmorItem armor && armor.getBodyType()==AnimalArmorItem.BodyType.EQUESTRIAN;
-            case 2->horse instanceof Horse && item.getItem() instanceof Horseshoe;
-            case 3->item.is(Items.LANTERN)||item.is(Items.SOUL_LANTERN);
+            case 2->MountEquipment.supported(horse) && item.getItem() instanceof Horseshoe;
+            case 3->(horse instanceof Donkey||horse instanceof Mule)&&(item.is(Items.LANTERN)||item.is(Items.SOUL_LANTERN));
             case 5->(horse instanceof Donkey||horse instanceof Mule)&&bagPresent&&com.fantasyfeudalism.items.sleep.SleepingBags.isSleepingBag(item);
             case 4->(horse instanceof Donkey||horse instanceof Mule)&&item.is(MountContent.SADDLEBAG.get());
             default->slot>=9&&bagPresent&&SaddlebagItem.allowed(item);

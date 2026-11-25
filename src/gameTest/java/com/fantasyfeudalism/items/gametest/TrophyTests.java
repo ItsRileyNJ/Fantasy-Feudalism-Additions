@@ -25,9 +25,10 @@ import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 @GameTestHolder(FeudalItems.ID)
 @PrefixGameTestTemplate(false)
 public final class TrophyTests {
-    private static ServerPlayer player(GameTestHelper h){
+    private static ServerPlayer player(GameTestHelper h){return player(h,0);}
+    private static ServerPlayer player(GameTestHelper h,int permission){
         var profile=new com.mojang.authlib.GameProfile(UUID.randomUUID(),"trophy-test");
-        var player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),profile,ClientInformation.createDefault());
+        var player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),profile,ClientInformation.createDefault()){@Override protected int getPermissionLevel(){return permission;}};
         var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND);
         new io.netty.channel.embedded.EmbeddedChannel(connection);
         new net.minecraft.server.network.ServerGamePacketListenerImpl(h.getLevel().getServer(),connection,player,new net.minecraft.server.network.CommonListenerCookie(profile,0,ClientInformation.createDefault(),false,net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE));
@@ -379,6 +380,36 @@ public final class TrophyTests {
         select(player,TrophyKind.WITHER_SKELETON);float health=player.getHealth();
         for(int i=1;i<30;i++){player.tickCount=i*20;TrophyEffects.tick(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Post(player));}
         h.assertTrue(player.getHealth()==health,"Wither trophy does not hurt before thirty active seconds");player.tickCount=600;TrophyEffects.tick(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Post(player));h.assertTrue(Math.abs(player.getHealth()-(health-1))<.001,"Wither trophy costs half a heart after thirty active seconds");h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void operators_bypass_trophy_placement_limits_without_extra_attunements(GameTestHelper h){
+        var admin=player(h,2);var ordinary=player(h);ordinary.setGameMode(GameType.CREATIVE);
+        var first=h.absolutePos(new BlockPos(2,2,2));var second=h.absolutePos(new BlockPos(4,2,2));var third=h.absolutePos(new BlockPos(6,2,2));
+        h.assertTrue(placeTrophy(h,admin,TrophyKind.CREEPER,first).consumesAction(),"Survival operator places first trophy");
+        h.assertTrue(placeTrophy(h,admin,TrophyKind.CREEPER,second).consumesAction(),"Operator bypasses same-type placement limit");
+        var ledger=TrophyLedger.get(h.getLevel());ledger.attune(admin.getUUID(),TrophyKind.CREEPER);
+        h.assertTrue(((TrophyEntity)h.getLevel().getBlockEntity(second)).owner.equals(admin.getUUID()),"Duplicate trophy retains operator ownership");
+        h.getLevel().removeBlock(first,false);
+        h.assertTrue(ledger.hasPlaced(admin.getUUID(),TrophyKind.CREEPER)&&ledger.active(admin.getUUID())==TrophyKind.CREEPER,"Removing one duplicate preserves remaining placement and attunement");
+        h.assertTrue(placeTrophy(h,admin,TrophyKind.SKELETON,third).consumesAction(),"Operator may also place other types");ledger.attune(admin.getUUID(),TrophyKind.SKELETON);
+        h.assertTrue(ledger.active(admin.getUUID())==TrophyKind.SKELETON,"Operator still has only one active trophy");
+        h.getLevel().removeBlock(second,false);h.assertFalse(ledger.hasPlaced(admin.getUUID(),TrophyKind.CREEPER),"Last duplicate removal clears that type");
+        h.assertTrue(ledger.active(admin.getUUID())==TrophyKind.SKELETON,"Removing another type preserves active trophy");
+        h.getLevel().removeBlock(third,false);h.assertTrue(ledger.active(admin.getUUID())==null,"Removing last active trophy clears attunement");
+        h.assertTrue(placeTrophy(h,ordinary,TrophyKind.CREEPER,first).consumesAction(),"Non-operator creative player can place first trophy");
+        h.assertTrue(placeTrophy(h,ordinary,TrophyKind.CREEPER,second)==InteractionResult.FAIL,"Creative mode alone does not bypass the limit");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void duplicate_trophy_counts_survive_reload_and_accept_legacy_saves(GameTestHelper h){
+        var owner=UUID.randomUUID();var ledger=new TrophyLedger();ledger.recordAdditionalPlacement(owner,TrophyKind.ZOMBIE);ledger.recordAdditionalPlacement(owner,TrophyKind.ZOMBIE);ledger.attune(owner,TrophyKind.ZOMBIE);
+        ledger=TrophyLedger.load(ledger.save(new net.minecraft.nbt.CompoundTag(),h.getLevel().registryAccess()),h.getLevel().registryAccess());
+        ledger.releasePlacement(owner,TrophyKind.ZOMBIE);h.assertTrue(ledger.hasPlaced(owner,TrophyKind.ZOMBIE),"Reload preserves the second placement count");
+        h.assertFalse(ledger.recordPlacement(owner,TrophyKind.ZOMBIE),"Remaining admin placement still reserves its type if privileges are removed");
+        ledger.releasePlacement(owner,TrophyKind.ZOMBIE);h.assertFalse(ledger.hasPlaced(owner,TrophyKind.ZOMBIE),"Last placement releases the type");
+        var legacy=new net.minecraft.nbt.CompoundTag();var row=new net.minecraft.nbt.CompoundTag();row.putUUID("Owner",owner);row.putBoolean("Placed_creeper",true);row.putString("Active","CREEPER");var rows=new net.minecraft.nbt.ListTag();rows.add(row);legacy.put("Players",rows);
+        ledger=TrophyLedger.load(legacy,h.getLevel().registryAccess());h.assertTrue(ledger.hasPlaced(owner,TrophyKind.CREEPER)&&ledger.active(owner)==TrophyKind.CREEPER,"Old boolean reservations retain their placement and attunement");
+        ledger.releasePlacement(owner,TrophyKind.CREEPER);h.assertFalse(ledger.hasPlaced(owner,TrophyKind.CREEPER),"Legacy reservation represents exactly one placed trophy");h.succeed();
     }
 
 }

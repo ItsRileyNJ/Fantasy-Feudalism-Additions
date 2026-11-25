@@ -36,7 +36,7 @@ public final class ClientSetup {
     @SubscribeEvent public static void layers(net.neoforged.neoforge.client.event.EntityRenderersEvent.AddLayers event){
         for(var type:new EntityType[]{EntityType.HORSE,EntityType.DONKEY,EntityType.MULE}){
             net.minecraft.client.renderer.entity.LivingEntityRenderer renderer=(net.minecraft.client.renderer.entity.LivingEntityRenderer)event.getRenderer(type);
-            if(renderer!=null)renderer.addLayer(new MountLayer(renderer));
+            if(renderer!=null){renderer.addLayer(new HorseshoeHoofLayer(renderer));if(type!=EntityType.HORSE)renderer.addLayer(new MountLayer(renderer));}
         }
     }
     @SubscribeEvent public static void setup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event){event.enqueueWork(()->{

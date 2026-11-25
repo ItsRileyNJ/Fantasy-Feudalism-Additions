@@ -29,17 +29,19 @@ public final class MountEquipment {
         if(display.isEmpty())visuals.remove("Slot"+slot);else visuals.put("Slot"+slot,display.save(horse.registryAccess()));
         if(!visuals.equals(horse.getData(com.fantasyfeudalism.items.content.ModAttachments.MOUNT)))horse.setData(com.fantasyfeudalism.items.content.ModAttachments.MOUNT,visuals);
     }
-    public static float jumpVelocity(Horse horse,float natural){
+    public static double shoeBonusScale(AbstractHorse horse){return horse instanceof Horse?1:.5;}
+    public static float jumpVelocity(AbstractHorse horse,float natural){
         ItemStack shoe;
         if(horse.level().isClientSide){var data=horse.getData(com.fantasyfeudalism.items.content.ModAttachments.MOUNT);shoe=data.contains("Slot2")?ItemStack.parse(horse.registryAccess(),data.getCompound("Slot2")).orElse(ItemStack.EMPTY):ItemStack.EMPTY;}else shoe=item(horse,2);
         if(!(shoe.getItem() instanceof Horseshoe h)||!h.gold||natural<=0)return natural;
-        double low=natural,high=Math.max(2,natural*2),target=jumpHeight(natural)*1.10;
+        double low=natural,high=Math.max(2,natural*2),target=jumpHeight(natural)*(1+.10*shoeBonusScale(horse));
         for(int i=0;i<60;i++){double middle=(low+high)/2;if(jumpHeight(middle)<target)low=middle;else high=middle;}
         return(float)((low+high)/2);
     }
     public static double jumpHeight(double velocity){double y=0;for(int i=0;i<1000&&velocity>0;i++){y+=velocity;velocity=(velocity-0.08)*0.98;}return y;}
     public static void join(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){
         if(!(event.getEntity() instanceof AbstractHorse horse)||event.getLevel().isClientSide||!supported(horse))return;
+        if(horse instanceof Horse&&!item(horse,3).isEmpty()){var old=item(horse,3);set(horse,3,ItemStack.EMPTY);horse.spawnAtLocation(old);}
         if(horse instanceof AbstractChestedHorse chested&&chested.hasChest()){
             var old=((com.fantasyfeudalism.items.trophy.mixin.HorseInventoryAccessor)horse).feudalItems$inventory();
             var contents=net.minecraft.core.NonNullList.withSize(27,ItemStack.EMPTY);for(int i=1;i<old.getContainerSize()&&i<=27;i++)contents.set(i-1,old.getItem(i).copy());
@@ -51,7 +53,7 @@ public final class MountEquipment {
     }
     public static void apply(AbstractHorse horse){
         var shoe=item(horse,2).getItem();var speed=horse.getAttribute(Attributes.MOVEMENT_SPEED);var jump=horse.getAttribute(Attributes.JUMP_STRENGTH);
-        if(speed!=null){double desired=shoe instanceof Horseshoe h?h.speed:0;var existing=speed.getModifier(SPEED);
+        if(speed!=null){double desired=shoe instanceof Horseshoe h?h.speed*shoeBonusScale(horse):0;var existing=speed.getModifier(SPEED);
             if(existing!=null&&existing.amount()!=desired){speed.removeModifier(SPEED);existing=null;}
             if(desired!=0&&existing==null)speed.addTransientModifier(new AttributeModifier(SPEED,desired,AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));}
         if(jump!=null)jump.removeModifier(JUMP);
@@ -68,7 +70,7 @@ public final class MountEquipment {
         if(!(event.getEntity() instanceof AbstractHorse horse)||!supported(horse))return;
         for(int i=2;i<=5;i++){var stack=item(horse,i);if(!stack.isEmpty()){event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(horse.level(),horse.getX(),horse.getY(),horse.getZ(),stack));set(horse,i,ItemStack.EMPTY);}}
     }
-    public static void damage(LivingIncomingDamageEvent event){if(event.getEntity() instanceof Horse horse&&event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FALL)&&item(horse,2).getItem() instanceof Horseshoe shoe)event.setAmount((float)(event.getAmount()*(1-shoe.fall)));}
+    public static void damage(LivingIncomingDamageEvent event){if(event.getEntity() instanceof AbstractHorse horse&&supported(horse)&&event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FALL)&&item(horse,2).getItem() instanceof Horseshoe shoe)event.setAmount((float)(event.getAmount()*(1-shoe.fall*shoeBonusScale(horse))));}
     public static long remaining(ItemStack lantern){return LightItemFuel.remaining(lantern);}
     public static boolean lit(ItemStack lantern){return LightItemFuel.lit(lantern);}
     public static void toggle(ItemStack lantern){LightItemFuel.setStage(lantern,LightItemFuel.stage(lantern),!lit(lantern));}

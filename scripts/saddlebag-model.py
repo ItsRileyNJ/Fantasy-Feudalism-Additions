@@ -114,8 +114,8 @@ def generate(root):
 public final class SaddlebagAttachment {
     private SaddlebagAttachment() {}
     public static final double X = %s, Y = %s, Z = %s;
-    public static final float OUTWARD_TILT = 20, REARWARD_TILT = 20;
-    public static final float CHAIN_LENGTH = 0.22f, LANTERN_SCALE = 0.45f;
+    public static final float OUTWARD_TILT = 20, REARWARD_TILT = 5;
+    public static final float CHAIN_LENGTH = 0.22f, LANTERN_SCALE = 0.6f;
 }
 ''' % tuple(peg))
     return parts,peg

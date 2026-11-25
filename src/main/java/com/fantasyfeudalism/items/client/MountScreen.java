@@ -21,9 +21,9 @@ public final class MountScreen extends AbstractContainerScreen<MountMenu> {
     private Component health=Component.empty();
     public MountScreen(MountMenu menu,Inventory inventory,Component title){
         super(menu,inventory,title);equine=menu.getRowCount()==1;
-        equipment=equine?new int[]{0,1,2,3}:new int[]{0,4,5,3};
-        icons=equine?new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(Items.IRON_HORSE_ARMOR),new ItemStack(MountContent.IRON.get()),new ItemStack(Items.LANTERN)}:
-            new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(MountContent.SADDLEBAG.get()),new ItemStack(SleepingBags.ITEMS.get(DyeColor.WHITE).get()),new ItemStack(Items.LANTERN)};
+        equipment=equine?new int[]{0,1,2}:new int[]{0,2,4,5,3};
+        icons=equine?new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(Items.IRON_HORSE_ARMOR),new ItemStack(MountContent.IRON.get())}:
+            new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(MountContent.IRON.get()),new ItemStack(MountContent.SADDLEBAG.get()),new ItemStack(SleepingBags.ITEMS.get(DyeColor.WHITE).get()),new ItemStack(Items.LANTERN)};
         imageHeight=menu.panelHeight();inventoryLabelY=menu.playerInventoryY()-12;
     }
     private void updateLayout(){

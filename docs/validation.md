@@ -464,3 +464,56 @@ The integration test also exposed a pre-existing NeoForge placement issue: the d
 - New tests exercise actual debug-stick left/right clicks, standing/hanging/waterlogged/Glow Oil lanterns, persisted empty fuel, permissions, crouching, ordinary toggling, native pickaxe drops, normal item-use replacement, oil refueling and bottle return, partial fuel, cancelled placements, soul lights and subclass lantern fixtures.
 - Release JAR inspection verifies current mixin registration/resources, valid JSON, and exclusion of GameTest classes and third-party JARs.
 - This server-side change was checked through the native item-use integration path. The graphical client and full external modpack were not rerun.
+
+
+## Matching attunement particles for every player — 0.1.9 (2026-11-24)
+
+All nine trophy attunements now emit a player aura at the same doubled Enderman rate: one batch of two particles every 20 game ticks. Enderman keeps its purple portal particles; Zombie, Skeleton, Creeper, Bogged and Piglin use their matching red, white/light-gray, green, poison-green and gold dust. Wither Skeleton uses dark smoke, Stray snowflakes and Player enchantment particles. Every aura uses the original Enderman spread and speed around the player. Particle options are cached per trophy rather than allocated every tick.
+
+- Full build and shader API checks passed: **95 server GameTests**, zero failures.
+- New integration tests inspect actual particle packets delivered to both the attuned player and a nearby observer for every trophy over 40 ticks. They verify two batches of two particles, exact particle types/dust colors, origin, spread, speed, normal client limits and nearby range. Enderman sends a single doubled batch rather than retaining a second old emission.
+- Switching attunement changes the emitted type. Clearing attunement or death stops new emissions; a status indicator alone does not create an aura. The tests exercise the server ledger without requiring a loaded trophy block.
+- Release JAR inspection checks current resources/version, valid JSON and exclusion of GameTest classes and bundled third-party JARs. The graphical client and external modpack were not rerun; all player particle types use vanilla client providers.
+
+
+## Administrator trophy placement bypass — 0.1.10 (2026-11-24)
+
+Operators at permission level 2 or higher bypass the one-placed-trophy-per-type check in survival and creative. Creative mode alone grants no exception. Ownership, destruction without drops and one active trophy effect remain in effect. Placement reservations now track counts per owner/type, persist across reloads and read legacy boolean reservations as a count of one. Removing one duplicate preserves the reservation and attunement until the final copy is removed.
+
+Full build and shader API checks passed: **97 server GameTests**, zero failures. New coverage checks survival operator duplicates, creative non-operator rejection, owner identity, single attunement, destruction order, duplicate count persistence and legacy save loading. The previous matching player-particle update is included. Graphical client and full external modpack checks were not rerun for this server-side permission change.
+
+
+## Mount lantern physics and horseshoes — 0.1.11 (2026-11-24)
+
+Saddlebag lanterns now use the full vanilla model size, compensating for vanilla donkey/mule renderer scale, on a longer chain. A client-tick damped pendulum responds to position acceleration, braking, body turns, gait and vertical motion. Render frames only interpolate; pausing freezes the simulation, teleports reset it, removal clears it and weak entity keys/world-change cleanup avoid retaining old mounts. Swing limits preserve the outward/rearward hanging pose.
+
+Horses no longer expose a lantern slot. Old equipped horse lanterns are returned once on server entity load with fuel/components preserved. Donkeys and mules have five dedicated equipment slots, including horseshoes without requiring saddlebags. Their speed, fall reduction and Gold jump-height bonuses are half the horse values; Gold adds five percent actual jump height. All three mount types show material-colored hoof overlays following adult/foal leg animation, and removing the shoe restores the original appearance.
+
+Validation: **99 server GameTests passed**, shader compatibility checks passed, and the pure Java pendulum checks passed (acceleration, turning, damping, interpolation, bounds and teleport reset). New server checks cover horse slot rejection, lossless/idempotent old-lantern return, donkey/mule speed and actual jump height, fall reduction, synchronization and bonus removal. **124 graphical client smoke checks passed**, covering all five hoof material changes and removal, horse UI without lanterns, and the expanded donkey/mule equipment UI. Native screenshots inspected Gold hooves and a full-size lantern; a controlled movement was recorded to inspect settling. The full external modpack and shaders were not rerun.
+
+
+## Mounted lantern size correction — 0.1.12 (2026-11-24)
+
+Reduced the saddlebag lantern model to 0.6 of its local size and removed the renderer-scale enlargement. This is approximately half the world-space size of 0.1.11 (52% on donkeys, 55% on mules). The chain is shortened from 0.42 to 0.34 body-local units; the lantern's handle remains attached to the chain and the movement-driven pendulum is retained.
+
+Assembly, pendulum physics checks and independent saddlebag model checks passed. This is a visual size/attachment change; server gameplay checks were not repeated. The original saddlebag geometry, horse slot removal, hoof colors and donkey/mule horseshoe bonuses remain part of this build.
+
+The graphical client passed **124 smoke checks** for 0.1.12, and a native screenshot from the same camera position verified the smaller lantern and shorter chain. Pendulum physics checks passed.
+
+Added bounded vertical tether lift for both jumping and falling, with a landing bounce and damped settling. The rendered chain shortens with the lift to keep the handle attached. Physics checks additionally cover upward motion in both directions, interpolation, settling and teleport reset.
+
+The final vertical-bob addition was verified with the physics checks; the client suite was not repeated for that addition.
+
+
+## Shorter mounted chain — 0.1.13 (2026-11-24)
+
+Reduced the chain from 0.34 to 0.22 body-local units (about 35% shorter). The lantern remains attached at the chain end, with the compact lantern scale, swing and jump/fall lift preserved. The minimum chain length during maximum lift remains positive (0.08). Updated the model generator as well as the generated attachment constants. Assembly and pendulum checks passed; the graphical client and server gameplay suites were not repeated for this length adjustment.
+
+
+## Resting lantern contact — 0.1.14 (2026-11-24)
+
+Reduced the fixed rearward lean from 20 degrees to 5 degrees so the resting lantern contacts the bags at the animal's side instead of floating behind the rear corner. The outward lean, compact scale, short chain and motion simulation remain. Donkeys and mules use the same body-local attachment, so their renderer scaling preserves contact. A geometric physics check verifies that the resting lantern's nearest upper corner touches the saddlebag bounds with only minimal overlap.
+
+Full build: **99 server integration tests**, pendulum/contact checks and shader API checks passed. This release includes the previously completed player trophy auras, admin trophy placement bypass, mount slots/bonuses, hoof colors and lantern motion refinements.
+
+The 0.1.14 graphical client passed **124 smoke checks**, and a native screenshot verified contact in the resting pose.

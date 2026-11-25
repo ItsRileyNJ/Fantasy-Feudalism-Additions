@@ -56,6 +56,7 @@ public final class TrophyEffects {
     public static void tick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player) || player.tickCount % 20 != 0) return;
         var kind = active(player);
+        if(kind!=null)TrophyParticles.playerAura(player,kind);
         int selected=kind==null?-1:kind.ordinal();if(player.getData(com.fantasyfeudalism.items.content.ModAttachments.TROPHY)!=selected)player.setData(com.fantasyfeudalism.items.content.ModAttachments.TROPHY,selected);
         changed(player);
         var armor = player.getAttribute(Attributes.ARMOR);
@@ -73,7 +74,6 @@ public final class TrophyEffects {
             var vision = player.getEffect(MobEffects.NIGHT_VISION);
             if(vision==null){player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION,240,0,true,false,true));OWN_VISION.put(player,player.getEffect(MobEffects.NIGHT_VISION));}
             else if(OWN_VISION.get(player)==vision){if(vision.getDuration()<=240)player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION,240,0,true,false,true));else OWN_VISION.remove(player);}
-            player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1, player.getZ(), 1, 0.2, 0.3, 0.2, 0.01);
         }
     }
     public static void changed(Player player){

@@ -15,7 +15,7 @@ public final class MountMenu extends ChestMenu {
     }
     private static net.minecraft.world.entity.animal.horse.AbstractHorse mount(Container container){return container instanceof MountInventory server?server.horse():container instanceof ClientInventory client?client.horse:null;}
     public static MountMenu client(int id,Inventory inventory,net.minecraft.network.RegistryFriendlyByteBuf data){var entity=inventory.player.level().getEntity(data.readVarInt());return new MountMenu(id,inventory,new ClientInventory(entity instanceof net.minecraft.world.entity.animal.horse.AbstractHorse h?h:null));}
-    public boolean disabled(int index){return index<9&&(getRowCount()==1?index>3:index!=0&&index!=3&&index!=4&&index!=5);}
+    public boolean disabled(int index){return index<9&&(getRowCount()==1?index>2:index!=0&&index!=2&&index!=3&&index!=4&&index!=5);}
 
     public MountMenu(int id,Inventory inventory,Container container){super(MountContent.MOUNT_MENU.get(),id,inventory,container,mount(container) instanceof net.minecraft.world.entity.animal.horse.Horse?1:4);horse=mount(container);refreshLayout();}
     public boolean hasCargo(){return getRowCount()>1&&!getContainer().getItem(4).isEmpty();}
@@ -35,9 +35,9 @@ public final class MountMenu extends ChestMenu {
         int storage=getRowCount()*9;
         Container source=slot.container;int sourceIndex=slot.getSlotIndex();
         boolean equine=getRowCount()==1;
-        boolean hidden=number<9&&(equine?number>3:number!=0&&number!=3&&number!=4&&number!=5);
+        boolean hidden=number<9&&(equine?number>2:number!=0&&number!=2&&number!=3&&number!=4&&number!=5);
         int x,y;
-        if(number<9){x=hidden?-1000:76+(equine?number:number==0?0:number==4?1:number==5?2:3)*22;y=32;}
+        if(number<9){x=hidden?-1000:(equine?76+number*22:70+(number==0?0:number==2?1:number==4?2:number==5?3:4)*20);y=32;}
         else if(number<storage){int cargo=number-9;x=8+cargo%9*18;y=82+cargo/9*18;}
         else{int inventory=number-storage;x=8+inventory%9*18;y=playerInventoryY()+(inventory<27?inventory/9*18:58);}
         return new Slot(source,sourceIndex,x,y){

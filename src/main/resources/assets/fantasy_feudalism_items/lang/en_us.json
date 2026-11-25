@@ -44,7 +44,7 @@
   "tooltip.fantasy_feudalism_items.trophy.bonus": "While attuned:",
   "tooltip.fantasy_feudalism_items.trophy.drawback": "Drawback:",
   "tooltip.fantasy_feudalism_items.trophy.attune": "Right-click a trophy you own to change your attunement.",
-  "tooltip.fantasy_feudalism_items.trophy.limit": "You can place one trophy of each type and attune to one at a time.",
+  "tooltip.fantasy_feudalism_items.trophy.limit": "One placed trophy per type (admins exempt). One active attunement.",
   "tooltip.fantasy_feudalism_items.trophy.zombie.benefit.0": "Gain Resistance I.",
   "tooltip.fantasy_feudalism_items.trophy.zombie.drawback.0": "Hunger depletes 25% faster.",
   "tooltip.fantasy_feudalism_items.trophy.skeleton.benefit.0": "Deal 15% more ranged damage.",

@@ -8,16 +8,20 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 /** Reservations for currently placed trophies survive death, saving and chunk unloading. */
 public final class TrophyLedger extends SavedData {
-    private final Map<UUID, EnumSet<TrophyKind>> placed = new HashMap<>();
+    private final Map<UUID, EnumMap<TrophyKind,Integer>> placed = new HashMap<>();
     private final Map<UUID, TrophyKind> active = new HashMap<>();
     public static TrophyLedger get(ServerLevel level) { return level.getServer().overworld().getDataStorage().computeIfAbsent(new Factory<>(TrophyLedger::new, TrophyLedger::load), "fantasy_feudalism_trophies"); }
-    public boolean hasPlaced(UUID owner, TrophyKind kind) { return placed.getOrDefault(owner, EnumSet.noneOf(TrophyKind.class)).contains(kind); }
+    public boolean hasPlaced(UUID owner, TrophyKind kind) { return placed.containsKey(owner)&&placed.get(owner).getOrDefault(kind,0)>0; }
     public boolean recordPlacement(UUID owner, TrophyKind kind) {
-        boolean added = placed.computeIfAbsent(owner, ignored -> EnumSet.noneOf(TrophyKind.class)).add(kind); if (added) setDirty(); return added;
+        boolean added = placed.computeIfAbsent(owner, ignored -> new EnumMap<>(TrophyKind.class)).putIfAbsent(kind,1)==null; if (added) setDirty(); return added;
+    }
+    public void recordAdditionalPlacement(UUID owner,TrophyKind kind){
+        placed.computeIfAbsent(owner,ignored->new EnumMap<>(TrophyKind.class)).merge(kind,1,Integer::sum);setDirty();
     }
     public boolean releasePlacement(UUID owner, TrophyKind kind) {
         var kinds = placed.get(owner);
-        if (kinds == null || !kinds.remove(kind)) return false;
+        if (kinds == null || !kinds.containsKey(kind)) return false;
+        int remaining=kinds.get(kind)-1;if(remaining>0)kinds.put(kind,remaining);else kinds.remove(kind);
         if (kinds.isEmpty()) placed.remove(owner);
         setDirty();
         return true;
@@ -30,7 +34,10 @@ public final class TrophyLedger extends SavedData {
         for (var value : tag.getList("Players", Tag.TAG_COMPOUND)) {
             var player = (CompoundTag) value; if (!player.hasUUID("Owner")) continue;
             var owner = player.getUUID("Owner");
-            for (var kind : TrophyKind.values()) if (player.getBoolean("Placed_" + kind.id())) ledger.recordPlacement(owner, kind);
+            for (var kind : TrophyKind.values()) {
+                int count=player.contains("Count_"+kind.id())?Math.max(0,player.getInt("Count_"+kind.id())):player.getBoolean("Placed_"+kind.id())?1:0;
+                if(count>0)ledger.placed.computeIfAbsent(owner,ignored->new EnumMap<>(TrophyKind.class)).put(kind,count);
+            }
             if (player.contains("Active")) try { ledger.active.put(owner, TrophyKind.valueOf(player.getString("Active"))); } catch (IllegalArgumentException ignored) {}
         }
         return ledger;
@@ -38,7 +45,7 @@ public final class TrophyLedger extends SavedData {
     @Override public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         var list = new ListTag();
         placed.forEach((owner, kinds) -> { var player = new CompoundTag(); player.putUUID("Owner", owner);
-            for (var kind : kinds) player.putBoolean("Placed_" + kind.id(), true);
+            kinds.forEach((kind,count)->{player.putBoolean("Placed_"+kind.id(),true);player.putInt("Count_"+kind.id(),count);});
             if (active.containsKey(owner)) player.putString("Active", active.get(owner).name()); list.add(player); });
         tag.put("Players", list); return tag;
     }

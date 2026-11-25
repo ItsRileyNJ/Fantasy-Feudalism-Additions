@@ -35,7 +35,7 @@ public final class TrophyBlock extends BaseEntityBlock {
     @Override public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         if (!level.isClientSide && placer instanceof Player player && level.getBlockEntity(pos) instanceof TrophyEntity trophy) {
             trophy.owner = player.getUUID(); trophy.setChanged();
-            TrophyLedger.get((net.minecraft.server.level.ServerLevel) level).recordPlacement(player.getUUID(), kind);
+            TrophyLedger.get((net.minecraft.server.level.ServerLevel) level).recordAdditionalPlacement(player.getUUID(), kind);
         }
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
@@ -62,7 +62,7 @@ public final class TrophyBlock extends BaseEntityBlock {
         if(!state.is(next.getBlock())&&level instanceof net.minecraft.server.level.ServerLevel server&&level.getBlockEntity(pos) instanceof TrophyEntity trophy&&trophy.owner!=null){
             var ledger=TrophyLedger.get(server);
             ledger.releasePlacement(trophy.owner,kind);
-            if(ledger.active(trophy.owner)==kind){ledger.clear(trophy.owner);var owner=server.getServer().getPlayerList().getPlayer(trophy.owner);if(owner!=null){TrophyEffects.changed(owner);owner.setData(com.fantasyfeudalism.items.content.ModAttachments.TROPHY,-1);owner.getPersistentData().remove("fantasy_feudalism_trophy");}}
+            if(!ledger.hasPlaced(trophy.owner,kind)&&ledger.active(trophy.owner)==kind){ledger.clear(trophy.owner);var owner=server.getServer().getPlayerList().getPlayer(trophy.owner);if(owner!=null){TrophyEffects.changed(owner);owner.setData(com.fantasyfeudalism.items.content.ModAttachments.TROPHY,-1);owner.getPersistentData().remove("fantasy_feudalism_trophy");}}
         }
         super.onRemove(state,level,pos,next,moving);
     }
@@ -73,7 +73,7 @@ public final class TrophyBlock extends BaseEntityBlock {
         final TrophyKind kind;
         public TrophyItem(TrophyBlock block, Properties properties) { super(block, properties); kind = block.kind; }
         @Override public InteractionResult place(net.minecraft.world.item.context.BlockPlaceContext context) {
-            if (!context.getLevel().isClientSide && context.getPlayer() != null
+            if (!context.getLevel().isClientSide && context.getPlayer() != null && !context.getPlayer().hasPermissions(2)
                 && TrophyLedger.get((net.minecraft.server.level.ServerLevel) context.getLevel()).hasPlaced(context.getPlayer().getUUID(), kind)) {
                 context.getPlayer().displayClientMessage(net.minecraft.network.chat.Component.translatable("message.fantasy_feudalism_items.trophy_limit"), true);
                 return InteractionResult.FAIL;

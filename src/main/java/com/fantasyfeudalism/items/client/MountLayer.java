@@ -13,6 +13,7 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
     public static final net.minecraft.client.resources.model.ModelResourceLocation SLEEPING_BAG_MODEL=net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("fantasy_feudalism_items","item/sleeping_bag_equipped"));
     public MountLayer(RenderLayerParent<T,M> parent){super(parent);}
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,T horse,float swing,float amplitude,float partial,float age,float yaw,float pitch){
+        if(horse instanceof net.minecraft.world.entity.animal.horse.Horse)return;
         var bag=com.fantasyfeudalism.items.mount.MountVisuals.bag(horse);
         var lantern=com.fantasyfeudalism.items.mount.MountVisuals.lantern(horse);
         if(bag.isEmpty()&&lantern.isEmpty())return;
@@ -33,27 +34,27 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
         }
         if(!lantern.isEmpty()){
             if(bag.isEmpty())renderItem(lantern,pose,buffers,light,horse,.47,-.05,-.65,.45f);
-            else renderHangingLantern(lantern,pose,buffers,light,horse,swing,amplitude,age);
+            else renderHangingLantern(lantern,pose,buffers,light,horse,partial);
         }
         pose.popPose();
     }
-    private void renderHangingLantern(ItemStack lantern,PoseStack pose,MultiBufferSource buffers,int light,T horse,float walk,float amplitude,float age){
+    private void renderHangingLantern(ItemStack lantern,PoseStack pose,MultiBufferSource buffers,int light,T horse,float partial){
         pose.pushPose();
         pose.translate(SaddlebagAttachment.X,SaddlebagAttachment.Y,SaddlebagAttachment.Z);
         // Entity-model +Y points down; +Z points toward the animal's rear.
-        float movement=net.minecraft.util.Mth.clamp(amplitude,0,1);
-        float phase=horse.getId()*.7f;
-        float outward=SaddlebagAttachment.OUTWARD_TILT+net.minecraft.util.Mth.sin(age*.08f+phase)*.8f+net.minecraft.util.Mth.sin(walk*.8f)*movement*5;
-        float rearward=SaddlebagAttachment.REARWARD_TILT+net.minecraft.util.Mth.sin(age*.065f+phase+1.1f)*.6f+net.minecraft.util.Mth.sin(walk*.8f+1.2f)*movement*4;
+        float outward=SaddlebagAttachment.OUTWARD_TILT+MountedLanternMotion.side(horse,partial);
+        float rearward=SaddlebagAttachment.REARWARD_TILT+MountedLanternMotion.back(horse,partial);
         pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-Math.copySign(outward,(float)SaddlebagAttachment.X)));
         pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rearward));
+        float chainLength=SaddlebagAttachment.CHAIN_LENGTH-MountedLanternMotion.lift(horse,partial);
         pose.pushPose();
-        pose.scale(.5f,SaddlebagAttachment.CHAIN_LENGTH,.5f);
+        pose.scale(.5f,chainLength,.5f);
         pose.translate(-.5,0,-.5);
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(net.minecraft.world.level.block.Blocks.CHAIN.defaultBlockState(),pose,buffers,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY);
         pose.popPose();
+        float scale=SaddlebagAttachment.LANTERN_SCALE;
         // The vanilla lantern handle reaches one model pixel above its item center.
-        renderItem(lantern,pose,buffers,light,horse,0,SaddlebagAttachment.CHAIN_LENGTH+SaddlebagAttachment.LANTERN_SCALE/16,0,SaddlebagAttachment.LANTERN_SCALE,ItemDisplayContext.NONE);
+        renderItem(lantern,pose,buffers,light,horse,0,chainLength+scale/16,0,scale,ItemDisplayContext.NONE);
         pose.popPose();
     }
     private void renderItem(ItemStack item,PoseStack pose,MultiBufferSource buffers,int light,T horse,double x,double y,double z,float scale){

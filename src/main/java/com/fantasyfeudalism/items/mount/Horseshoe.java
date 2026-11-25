@@ -15,6 +15,7 @@ public final class Horseshoe extends Item {
     }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.literal("+" + Math.round(speed*100) + "% horse speed; " + Math.round(fall*100) + "% less fall damage"));
-        if (gold) tooltip.add(Component.literal("+10% jump height"));
+        if (gold) tooltip.add(Component.literal("+10% jump height (+5% on donkeys/mules)"));
+        tooltip.add(Component.literal("Donkeys and mules receive half the horse bonuses."));
     }
 }

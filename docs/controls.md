@@ -18,3 +18,11 @@ Recipe-book unlocks occur when the appropriate ingredient is obtained. New items
 - Craft torches with one flint and steel to restore full fuel. Each occupied torch slot supplies one refreshed torch per craft and costs one durability use. Shift-craft for bulk refreshing; the tool is returned until it breaks.
 
 - Creative-mode operators can use a debug stick on a normal lantern: left-click until `lit` is selected, then right-click to set `lit=false`. This empties its fuel and produces a burnt-out lantern. Setting `lit=true` with the debug stick restores full fuel. Crouching/reverse edits work too. Refill a burnt-out lantern normally with oil.
+
+- While attuned, your player emits the selected trophy’s matching particles at two particles per second. Switching trophies changes the aura; ending attunement removes it.
+
+- Server operators with permission level 2 or higher may place multiple trophies of the same type, in survival or creative. Ownership and the single active attunement still apply. Removing a duplicate preserves attunement while another copy of that type remains.
+
+- Horses have saddle, armor and horseshoe slots. Donkeys/mules also have a dedicated horseshoe slot, receiving half the horse bonuses. Hoof colors follow the equipped material. Only donkeys/mules have lantern slots; their saddlebag lanterns use a compact scale and swing with movement.
+
+- At rest, mounted lanterns touch the bags at the donkey/mule’s side; motion still lets them swing and bob.
