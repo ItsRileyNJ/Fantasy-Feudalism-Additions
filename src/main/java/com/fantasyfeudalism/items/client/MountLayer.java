@@ -44,7 +44,7 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
         // Entity-model +Y points down; +Z points toward the animal's rear.
         float outward=SaddlebagAttachment.OUTWARD_TILT+MountedLanternMotion.side(horse,partial);
         float rearward=SaddlebagAttachment.REARWARD_TILT+MountedLanternMotion.back(horse,partial);
-        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-Math.copySign(outward,(float)SaddlebagAttachment.X)));
+        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-Math.signum((float)SaddlebagAttachment.X)*outward));
         pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rearward));
         float chainLength=SaddlebagAttachment.CHAIN_LENGTH-MountedLanternMotion.lift(horse,partial);
         pose.pushPose();

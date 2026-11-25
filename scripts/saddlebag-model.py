@@ -49,8 +49,8 @@ def generate(root):
                 return [(native[i]-(0,11,5)[i])/16 for i in range(3)]
             points=[transform(p) for p in product(*zip(cube['from'],cube['to']))]
             if node==PEG:
-                # Use the peg's outer/front end, centered vertically and across its width.
-                peg=transform([(cube['from'][0]+cube['to'][0])/2,(cube['from'][1]+cube['to'][1])/2,cube['to'][2]])
+                # Attach at the center of the brass mounting block.
+                peg=transform([(cube['from'][0]+cube['to'][0])/2,(cube['from'][1]+cube['to'][1])/2,(cube['from'][2]+cube['to'][2])/2])
             # ItemRenderer centers at 8 and the existing entity layer flips Y/Z.
             converted=[[8+p[0]*16,8-p[1]*16,8-p[2]*16] for p in points]
             bounds=[[round(min(p[i] for p in converted),6) for i in range(3)],[round(max(p[i] for p in converted),6) for i in range(3)]]
@@ -114,7 +114,7 @@ def generate(root):
 public final class SaddlebagAttachment {
     private SaddlebagAttachment() {}
     public static final double X = %s, Y = %s, Z = %s;
-    public static final float OUTWARD_TILT = 20, REARWARD_TILT = 5;
+    public static final float OUTWARD_TILT = 5, REARWARD_TILT = 15;
     public static final float CHAIN_LENGTH = 0.22f, LANTERN_SCALE = 0.6f;
 }
 ''' % tuple(peg))

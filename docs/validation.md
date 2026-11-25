@@ -517,3 +517,14 @@ Reduced the fixed rearward lean from 20 degrees to 5 degrees so the resting lant
 Full build: **99 server integration tests**, pendulum/contact checks and shader API checks passed. This release includes the previously completed player trophy auras, admin trophy placement bypass, mount slots/bonuses, hoof colors and lantern motion refinements.
 
 The 0.1.14 graphical client passed **124 smoke checks**, and a native screenshot verified contact in the resting pose.
+
+
+## Centered mounting block and rearward lantern — 0.1.15 (2026-11-24)
+
+Centered the chain on the original brass mounting block: body-local X moves from 0.5 to 0.40625, preserving Y=-0.40625 and Z=0.34375. The generator derives this from the marked cube's center. Changed the resting lean to 5 degrees outward and 15 degrees rearward so the lantern hangs primarily off the bag's rear. Lantern size, chain length and motion simulation are retained. Signed lateral swing is preserved when it crosses the reduced outward resting angle.
+
+Assembly and physics/contact checks passed, including the mounting block center and contact with the rear saddlebag face. Independent geometry checks confirm the supplied model itself is unchanged. This is a visual attachment change; the server gameplay suite was not rerun.
+
+Movement forces and vertical lift now use a 1.15 response multiplier, with the existing safety bounds unchanged. Forward acceleration is explicitly projected onto the mount's facing direction. Physics checks verify the 15% impulse increase and forward acceleration/braking at all four cardinal headings, alongside interpolation, damping, turning, jump/fall lift, teleport reset and attachment contact. Assembly and the independent original-model check passed.
+
+The updated 0.1.15 graphical client passed **124 smoke checks**. A local test-world datapack drives straight movement and stopping for the native motion preview; it is excluded from the release.

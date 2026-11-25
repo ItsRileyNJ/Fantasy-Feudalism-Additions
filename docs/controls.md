@@ -25,4 +25,4 @@ Recipe-book unlocks occur when the appropriate ingredient is obtained. New items
 
 - Horses have saddle, armor and horseshoe slots. Donkeys/mules also have a dedicated horseshoe slot, receiving half the horse bonuses. Hoof colors follow the equipped material. Only donkeys/mules have lantern slots; their saddlebag lanterns use a compact scale and swing with movement.
 
-- At rest, mounted lanterns touch the bags at the donkey/mule’s side; motion still lets them swing and bob.
+- At rest, mounted lanterns touch the rear face of the saddlebag, with the chain centered on the small brass mounting block; motion still lets them swing and bob.
