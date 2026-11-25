@@ -569,3 +569,17 @@ Changed the material atlas from 128x128 to 16x16 and mapped each source face at 
 Assembly and the independent original-model/UV check passed. A per-face density check verified one texel per model unit for every bag, strap, buckle and peg face; the editable model embeds the exact runtime PNG.
 
 The final graphical client passed **124 smoke checks**. Inspected the actual equipped-donkey preview: silver buckle and mount, no yellow stitching, saddle-brown shading and vanilla-density pixels. Server gameplay tests were not repeated for this visual change.
+
+
+## Saddle leather color refinement — 0.1.21 (2026-11-24)
+
+Shifted the bag's leather and straps away from the reddish-orange cast toward a more muted vanilla saddle-brown palette. Preserved the medium-silver material tile exactly: an ImageMagick absolute-error comparison of all 8x8 hardware pixels reports zero differences. No yellow stitching was added; vanilla texel density, UV layout, shading direction and original geometry are retained. Regenerated the editable model with the updated embedded atlas. Assembly and independent model/UV checks passed.
+
+The graphical client passed **124 smoke checks** and a native screenshot was inspected beside the saddle. The atlas remains 16x16; the existing one-texel-per-model-unit UV layout was not changed. Server gameplay checks were not repeated for this palette-only adjustment.
+
+
+## Exact vanilla saddle brown palette — 0.1.22 (2026-11-24)
+
+Replaced the overly yellow draft leather palette with six brown shades sampled from the vanilla horse saddle's top-face UV region (35,0)-(45,9): #4E2C13, #593317, #613A1D, #6F421F, #764928 and #8A552E. Quantized leather, strap and lining tiles to these exact colors without dithering. Preserved every approved silver hardware pixel from 0.1.20; the hardware tile's absolute pixel error remains zero. The 16x16 atlas, one-texel-per-model-unit UVs, shading, no-stitching finish and original geometry remain.
+
+Assembly, the independent model/UV check and all **124 graphical client smoke checks** passed. Rechecked one texel per model unit and the exact embedded atlas. Server gameplay tests were not repeated for this palette-only adjustment.
