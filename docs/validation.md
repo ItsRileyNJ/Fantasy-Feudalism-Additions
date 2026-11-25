@@ -528,3 +528,44 @@ Assembly and physics/contact checks passed, including the mounting block center 
 Movement forces and vertical lift now use a 1.15 response multiplier, with the existing safety bounds unchanged. Forward acceleration is explicitly projected onto the mount's facing direction. Physics checks verify the 15% impulse increase and forward acceleration/braking at all four cardinal headings, alongside interpolation, damping, turning, jump/fall lift, teleport reset and attachment contact. Assembly and the independent original-model check passed.
 
 The updated 0.1.15 graphical client passed **124 smoke checks**. A local test-world datapack drives straight movement and stopping for the native motion preview; it is excluded from the release.
+
+
+## Sustained mounted lantern trailing — 0.1.16 (2026-11-24)
+
+Forward velocity now sets a persistent rearward spring target: 60 degrees per block/tick, with the existing 1.15 movement-response multiplier and a 24-degree target cap. This is additional lean relative to the unchanged resting attachment. The lantern stays trailing at steady forward speed rather than depending solely on acceleration and gait impulses. Slowing reduces the target; stopping returns it to zero. Existing angular safety bounds, interpolation, inertia, jump/fall lift, mounting location and size are preserved.
+
+Assembly and lantern physics checks passed. Tests cover continuous running throughout the gait cycle, lower-speed trailing and settling after stopping at all four cardinal headings, plus existing acceleration, braking, turning, interpolation, bounds, teleport and rest-contact checks. The graphical client and server integration suites were not repeated for this client-only physics adjustment.
+
+
+## Shaded equipped horseshoes — 0.1.17 (2026-11-24)
+
+Gold tint changes from #FFDB5C to #E6C04A for both the item sprite and mounted overlay. All five equipped horseshoe materials now use Minecraft's iron-block metal texture instead of white concrete, with adjoining highlighted upper rims, material-colored bodies and darker soles. The bands follow the existing animated legs and preserve the adult/foal silhouette for horses, donkeys and mules. The mesh is baked once per renderer and all bands share a texture/render buffer. Equipment rules and bonuses are unchanged.
+
+Assembly, lantern physics checks (including the pending sustained forward trailing change) and **124 graphical client smoke checks** passed. Inspected the gold-equipped horse preview in game. Server gameplay tests were not repeated for this visual change.
+
+
+## Lower horse horseshoe bands — 0.1.18 (2026-11-24)
+
+Reduced the equipped horseshoe band height by 35% on horses, including foals. Vertical scaling is anchored at the existing hoof bottom so the shoes cover less of the upper hoof while the soles stay in place. All five materials retain the metal texture and rim/sole shading. Donkey and mule band dimensions are unchanged.
+
+Assembly passed. The graphical client and gameplay suites were not rerun for this rendering-only height adjustment.
+
+
+## Approved saddlebag texture — 0.1.19 (2026-11-24)
+
+Applied the approved mockup's dark chocolate leather, copper-orange trim and brass hardware palette to the existing four-quadrant material atlas. Resampled the generated texture to the existing 128x128 pixel format and regenerated the editable Blockbench copy with the identical embedded atlas. The original UV coordinates, model geometry, pivots, lantern attachment, separate sleeping-bag appearance and non-dyeable behavior are preserved.
+
+Assembly and the independent model/UV check passed: all 14 original cubes and pivots are preserved, and both the full saddlebag and crafting half retain untinted, in-bounds material mappings.
+
+The graphical client passed **124 smoke checks**. Inspected an actual equipped-donkey screenshot with the new atlas. The editable model embeds the exact runtime PNG. Server gameplay tests were not repeated for this texture-only change.
+
+
+## Saddle-matched leather and silver fittings — 0.1.20 (2026-11-24)
+
+Retextured the saddlebag to warm saddle-brown leather with subtly lighter upper faces and darker lower faces. Removed all yellow stitching and copper-orange trim. Both bag buckles and the lantern mounting block share a medium-silver metal tile. Original mesh, pivots, attachment and non-dyeable behavior are preserved.
+
+Changed the material atlas from 128x128 to 16x16 and mapped each source face at exactly one texture pixel per model unit, including tiny straps, buckles and peg. Upper faces sample the lighter part of their material; lower faces sample darker regions. Updated the full bag, equipped bag, crafting half and embedded Blockbench texture together. The optional sleeping bag retains its separate color-specific texture.
+
+Assembly and the independent original-model/UV check passed. A per-face density check verified one texel per model unit for every bag, strap, buckle and peg face; the editable model embeds the exact runtime PNG.
+
+The final graphical client passed **124 smoke checks**. Inspected the actual equipped-donkey preview: silver buckle and mount, no yellow stitching, saddle-brown shading and vanilla-density pixels. Server gameplay tests were not repeated for this visual change.

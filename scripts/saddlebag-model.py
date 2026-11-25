@@ -13,8 +13,11 @@ MATERIALS={'leather':(0,0),'strap':(8,0),'metal':(0,8),'lining':(8,8)}
 
 def face_uv(material,side,size):
     a,b={'north':(0,1),'south':(0,1),'east':(2,1),'west':(2,1),'up':(0,2),'down':(0,2)}[side]
-    w,h=size[a],size[b];scale=7.75/max(w,h);u,v=MATERIALS[material]
-    return [round(u+4-w*scale/2,6),round(v+4-h*scale/2,6),round(u+4+w*scale/2,6),round(v+4+h*scale/2,6)]
+    # A 16px atlas and one UV unit per model unit preserve vanilla texel density
+    # even on tiny buckles/pegs. Top/bottom faces sample lighter/darker leather.
+    w,h=size[a],size[b];u,v=MATERIALS[material]
+    center_v=v+h/2 if side=='up' else v+8-h/2 if side=='down' else v+4
+    return [round(u+4-w/2,6),round(center_v-h/2,6),round(u+4+w/2,6),round(center_v+h/2,6)]
 
 def rotate(point, origin, angles):
     p = [a-b for a,b in zip(point,origin)]
@@ -67,7 +70,7 @@ def generate(root):
                 if target in ('up','down'):
                     angle=sum(g.get('rotation',[0,0,0])[1] for g in parents)+cube.get('rotation',[0,0,0])[1]+180
                     faces[target]['rotation']=int((-angle if target=='up' else angle)%360)
-                bbfaces[side]={'uv':[round(c*8,6) for c in uv],'texture':0}
+                bbfaces[side]={'uv':[round(c,6) for c in uv],'texture':0}
             if node!=ROLL:
                 textured_cubes[node].update(box_uv=False,mirror_uv=False,faces=bbfaces)
             if node==ROLL:
@@ -103,10 +106,10 @@ def generate(root):
     (root/f'src/main/resources/assets/{MOD}/models/item/saddlebag_half.json').write_text(json.dumps(half,indent=2)+'\n')
     # An editable Blockbench copy carries the finished UVs and embedded atlas.
     png=(root/f'src/main/resources/assets/{MOD}/textures/item/saddlebag_materials.png').read_bytes()
-    textured['meta']['box_uv']=False;textured['resolution']={'width':128,'height':128}
-    textured['textures']=[{'name':'saddlebag_materials.png','id':'0','uuid':'c3487d30-bda6-4c42-9270-bd5f85e3ab25','width':128,'height':128,'uv_width':128,'uv_height':128,'render_mode':'default','render_sides':'auto','visible':True,'source':'data:image/png;base64,'+base64.b64encode(png).decode()}]
+    textured['meta']['box_uv']=False;textured['resolution']={'width':16,'height':16}
+    textured['textures']=[{'name':'saddlebag_materials.png','id':'0','uuid':'c3487d30-bda6-4c42-9270-bd5f85e3ab25','width':16,'height':16,'uv_width':16,'uv_height':16,'render_mode':'default','render_sides':'auto','visible':True,'source':'data:image/png;base64,'+base64.b64encode(png).decode()}]
     # The optional sleeping bag retains its separate color-tinted runtime model.
-    textured_cubes[ROLL].update(box_uv=False,mirror_uv=False,faces={side:{'uv':[65,65,127,127],'texture':0} for side in NORMALS})
+    textured_cubes[ROLL].update(box_uv=False,mirror_uv=False,faces={side:{'uv':[8,8,16,16],'texture':0} for side in NORMALS})
     (root/'models/Saddlebag-textured.bbmodel').write_text(json.dumps(textured,indent=2)+'\n')
     java=root/'src/main/java/com/fantasyfeudalism/items/client/SaddlebagAttachment.java'
     java.write_text('''package com.fantasyfeudalism.items.client;

@@ -19,8 +19,12 @@ public final class LanternPendulum {
         // acceleration onto it so straight travel and braking work at every heading.
         double forwardAcceleration=-ax*Math.sin(r)+az*Math.cos(r);
         double backForce=forwardAcceleration*40-ay*5+Math.cos(walk*.8)*speed*.9;
+        // Sustained forward travel keeps the lantern trailing, even after acceleration
+        // ends. The spring returns to its resting angle when forward speed reaches zero.
+        double forwardSpeed=-dx*Math.sin(r)+dz*Math.cos(r);
+        double trailingAngle=clamp(forwardSpeed*60*MOVEMENT_RESPONSE,0,24);
         sideSpeed=(sideSpeed+clamp(sideForce*MOVEMENT_RESPONSE,-8,8)-side*.12)*.86;
-        backSpeed=(backSpeed+clamp(backForce*MOVEMENT_RESPONSE,-8,8)-back*.12)*.86;
+        backSpeed=(backSpeed+clamp(backForce*MOVEMENT_RESPONSE,-8,8)-(back-trailingAngle)*.12)*.86;
         double next=clamp(side+sideSpeed,-12,30);if(next!=side+sideSpeed)sideSpeed=0;side=next;
         next=clamp(back+backSpeed,-16,32);if(next!=back+backSpeed)backSpeed=0;back=next;
         // Vertical travel lets the lantern rise on its tether; landing adds a short bounce.

@@ -11,24 +11,54 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.horse.Horse;
 
-/** Small material-colored overlays follow each existing animated hoof, including foals. */
+/** Textured metal bands follow each animated hoof, with a bright rim and darker sole. */
 public final class HorseshoeHoofLayer<T extends AbstractHorse,M extends HorseModel<T>> extends RenderLayer<T,M> {
-    private static final ResourceLocation TEXTURE=ResourceLocation.withDefaultNamespace("textures/block/white_concrete.png");
-    private final ModelPart[] legs,hooves=new ModelPart[8];
+    private static final ResourceLocation TEXTURE=ResourceLocation.withDefaultNamespace("textures/block/iron_block.png");
+    private final ModelPart[] legs;
+    private final ModelPart[][] hooves=new ModelPart[8][3];
     public HorseshoeHoofLayer(RenderLayerParent<T,M> parent){
         super(parent);var model=(HorseBodyAccessor)parent.getModel();
         legs=new ModelPart[]{model.feudalItems$rightHindLeg(),model.feudalItems$leftHindLeg(),model.feudalItems$rightFrontLeg(),model.feudalItems$leftFrontLeg(),model.feudalItems$rightHindBabyLeg(),model.feudalItems$leftHindBabyLeg(),model.feudalItems$rightFrontBabyLeg(),model.feudalItems$leftFrontBabyLeg()};
         var mesh=new MeshDefinition();
-        for(int i=0;i<8;i++)mesh.getRoot().addOrReplaceChild("hoof"+i,CubeListBuilder.create().addBox(i%2==0?-1:-3,i<4?7.99f:13.49f,i%4<2?-1:-1.9f,4,2,4,new CubeDeformation(.015f)),PartPose.ZERO);
-        var root=LayerDefinition.create(mesh,16,16).bakeRoot();for(int i=0;i<8;i++)hooves[i]=root.getChild("hoof"+i);
+        for(int i=0;i<8;i++){
+            float x=i%2==0?-1:-3,y=i<4?7.975f:13.475f,z=i%4<2?-1:-1.9f;
+            // Three adjoining bands retain the existing silhouette. Only X/Z expand,
+            // so the differently shaded vertical surfaces never overlap or flicker.
+            var expand=new CubeDeformation(.015f,0,.015f);
+            mesh.getRoot().addOrReplaceChild("hoof"+i+"_0",CubeListBuilder.create().texOffs(0,0).addBox(x,y,z,4,.3f,4,expand),PartPose.ZERO);
+            mesh.getRoot().addOrReplaceChild("hoof"+i+"_1",CubeListBuilder.create().texOffs(0,4).addBox(x,y+.3f,z,4,1.43f,4,expand),PartPose.ZERO);
+            mesh.getRoot().addOrReplaceChild("hoof"+i+"_2",CubeListBuilder.create().texOffs(0,10).addBox(x,y+1.73f,z,4,.3f,4,expand),PartPose.ZERO);
+        }
+        var root=LayerDefinition.create(mesh,16,16).bakeRoot();
+        for(int i=0;i<8;i++)for(int band=0;band<3;band++)hooves[i][band]=root.getChild("hoof"+i+"_"+band);
     }
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,T horse,float swing,float amplitude,float partial,float age,float yaw,float pitch){
         var shoe=MountVisuals.shoe(horse);if(!(shoe.getItem() instanceof Horseshoe)||horse.isInvisible())return;
-        int color=Horseshoe.itemColor(shoe,0);pose.pushPose();
+        int color=Horseshoe.itemColor(shoe,0),rim=shade(color,1.08f),sole=shade(color,.62f);pose.pushPose();
         if(horse.isBaby()){pose.scale(.5f,.5f,.5f);pose.translate(0,20f/16,0);}
         var vertices=buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
-        for(int i=0;i<8;i++)if(legs[i].visible){pose.pushPose();legs[i].translateAndRotate(pose);hooves[i].render(pose,vertices,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,color);pose.popPose();}
+        for(int i=0;i<8;i++)if(legs[i].visible){
+            pose.pushPose();legs[i].translateAndRotate(pose);
+            if(horse instanceof Horse){
+                // Shorten toward the hoof bottom, keeping the sole at its original
+                // height rather than letting the scaled band float above the ground.
+                float heightScale=.65f,bottom=i<4?10.005f:15.505f;
+                pose.translate(0,bottom*(1-heightScale)/16,0);
+                pose.scale(1,heightScale,1);
+            }
+            hooves[i][0].render(pose,vertices,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,rim);
+            hooves[i][1].render(pose,vertices,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,color);
+            hooves[i][2].render(pose,vertices,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,sole);
+            pose.popPose();
+        }
         pose.popPose();
+    }
+    private static int shade(int color,float brightness){
+        int r=Math.min(255,Math.round((color>>16&255)*brightness));
+        int g=Math.min(255,Math.round((color>>8&255)*brightness));
+        int b=Math.min(255,Math.round((color&255)*brightness));
+        return 0xFF000000|r<<16|g<<8|b;
     }
 }

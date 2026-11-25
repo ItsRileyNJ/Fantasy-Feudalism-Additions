@@ -12,7 +12,7 @@ public final class MountContent {
     public static final DeferredItem<Item> HALF=Content.ITEMS.registerSimpleItem("saddlebag_half");
     public static final DeferredItem<Horseshoe> COPPER=Content.ITEMS.register("copper_horseshoe",()->new Horseshoe(.05,.15,false,0xFFFFB18C,new Item.Properties()));
     public static final DeferredItem<Horseshoe> IRON=Content.ITEMS.register("iron_horseshoe",()->new Horseshoe(.08,.25,false,0xFFF2F4F5,new Item.Properties()));
-    public static final DeferredItem<Horseshoe> GOLD=Content.ITEMS.register("gold_horseshoe",()->new Horseshoe(.11,.35,true,0xFFFFDB5C,new Item.Properties()));
+    public static final DeferredItem<Horseshoe> GOLD=Content.ITEMS.register("gold_horseshoe",()->new Horseshoe(.11,.35,true,0xFFE6C04A,new Item.Properties()));
     public static final DeferredItem<Horseshoe> DIAMOND=Content.ITEMS.register("diamond_horseshoe",()->new Horseshoe(.15,.5,false,0xFF65E8E1,new Item.Properties()));
     public static final DeferredItem<Horseshoe> NETHERITE=Content.ITEMS.register("netherite_horseshoe",()->new Horseshoe(.2,.7,false,0xFF897C87,new Item.Properties()));
     public static final DeferredRegister<MenuType<?>> MENUS=DeferredRegister.create(Registries.MENU,FeudalItems.ID);

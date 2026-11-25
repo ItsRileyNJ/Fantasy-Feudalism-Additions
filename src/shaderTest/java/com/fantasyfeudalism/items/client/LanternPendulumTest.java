@@ -9,13 +9,28 @@ public final class LanternPendulumTest {
         for(int yaw:new int[]{0,90,180,270}){
             double r=Math.toRadians(yaw),dx=-Math.sin(r)*.05,dz=Math.cos(r)*.05;
             var forward=new LanternPendulum();forward.step(0,0,0,yaw,0);forward.step(dx,0,dz,yaw,0);
-            double expected=(.05*40+.05*.9)*1.15*.86;
+            double expected=((.05*40+.05*.9)*1.15+.05*60*1.15*.12)*.86;
             check(Math.abs(forward.back(1)-expected)<.00001,"Forward acceleration drives rearward swing at yaw "+yaw);
             check(Math.abs(forward.side(1))<.00001,"Forward motion stays on the fore/aft axis at yaw "+yaw);
             for(int i=0;i<400;i++)forward.step(dx*(i+2),0,dz*(i+2),yaw,0);
             float cruising=forward.back(1);
             forward.step(dx*401,0,dz*401,yaw,0);
             check(forward.back(1)<cruising,"Braking produces the opposite impulse at yaw "+yaw);
+        }
+        for(int yaw:new int[]{0,90,180,270}){
+            double r=Math.toRadians(yaw),x=0,z=0;
+            var running=new LanternPendulum();running.step(x,0,z,yaw,0);
+            for(int i=1;i<=400;i++){
+                x-=Math.sin(r)*.2;z+=Math.cos(r)*.2;running.step(x,0,z,yaw,i*.7);
+                if(i>100)check(running.back(1)>10,"Continuous running keeps a rearward trail throughout the gait at yaw "+yaw);
+            }
+            float fast=running.back(1);
+            for(int i=1;i<=400;i++){
+                x-=Math.sin(r)*.05;z+=Math.cos(r)*.05;running.step(x,0,z,yaw,i*.7);
+            }
+            check(running.back(1)>1&&running.back(1)<fast,"Slower forward movement reduces the trailing angle at yaw "+yaw);
+            for(int i=0;i<400;i++)running.step(x,0,z,yaw,0);
+            check(Math.abs(running.back(1))<.001,"Stopping returns the trailing lantern to rest at yaw "+yaw);
         }
         float a=p.side(0),b=p.side(1);check(Math.abs(p.side(.5f)-(a+b)/2)<.0001,"Rendering interpolates without advancing physics");
         for(int i=0;i<400;i++)p.step(.2,0,0,0,0);
@@ -40,6 +55,6 @@ public final class LanternPendulumTest {
         double contactY=SaddlebagAttachment.Y+Math.sin(rz)*half+Math.cos(rz)*rotatedY;
         double contactZ=SaddlebagAttachment.Z+Math.sin(rx)*yy-Math.cos(rx)*half;
         check(contactX<=.5&&contactX>=.3125&&contactY>=-.5&&contactY<=0&&contactZ>=.30&&contactZ<=.3125,"Resting lantern touches the saddlebag rear face without a floating gap");
-        System.out.println("Lantern physics passed: acceleration, turning, damping, interpolation, bounds and teleport reset.");
+        System.out.println("Lantern physics passed: acceleration, sustained forward trailing, braking, turning, damping, interpolation, bounds and teleport reset.");
     }
 }
