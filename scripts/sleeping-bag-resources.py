@@ -127,7 +127,7 @@ def generate(root):
         })
     lang=json.loads((resources/f'{assets}/lang/en_us.json').read_text())
     for color in COLORS:
-        name=color+'_sleeping_bag';label=' '.join(x.capitalize() for x in color.split('_'))+' Sleeping Bag';lang['block.'+MOD+'.'+name]=label
+        name=color+'_sleeping_bag';label=' '.join(x.capitalize() for x in color.split('_'))+' Bedroll';lang['block.'+MOD+'.'+name]=label
         texture = f'{MOD}:block/sleeping_bag/{color}'
         write_texture(resources / f'{assets}/textures/block/sleeping_bag/{color}.png', PALETTES[color])
         for suffix in ('', '_equipped'):
@@ -146,7 +146,7 @@ def generate(root):
     values=[MOD+':'+c+'_sleeping_bag' for c in COLORS]
     write(f'data/{MOD}/tags/item/sleeping_bags.json',{'replace':False,'values':values})
     p=resources/f'data/{MOD}/tags/item/items.json';items=json.loads(p.read_text());items['values']=list(dict.fromkeys(items['values']+values));write(f'data/{MOD}/tags/item/items.json',items)
-    write(f'data/{MOD}/advancement/sleeping_bag.json',{'parent':MOD+':root','display':{'icon':{'id':MOD+':white_sleeping_bag'},'title':'Portable Rest','description':'Obtain a sleeping bag'},'criteria':{'sleeping_bag':{'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':'#'+MOD+':sleeping_bags'}]}}}})
-    lang.update({'tooltip.'+MOD+'.sleeping_bag':'10-second sleep. Does not set your spawn point.','message.'+MOD+'.remove_sleeping_bag':'Remove the sleeping bag before removing the saddlebags.','container.'+MOD+'.bags':'Bags','container.'+MOD+'.bedroll':'Bedroll'})
+    write(f'data/{MOD}/advancement/sleeping_bag.json',{'parent':MOD+':root','display':{'icon':{'id':MOD+':white_sleeping_bag'},'title':'Portable Rest','description':'Obtain a bedroll'},'criteria':{'sleeping_bag':{'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':'#'+MOD+':sleeping_bags'}]}}}})
+    lang.update({'tooltip.'+MOD+'.sleeping_bag':'10-second sleep. Does not set your spawn point.','message.'+MOD+'.remove_sleeping_bag':'Remove the bedroll before removing the saddlebags.','container.'+MOD+'.bags':'Bags','container.'+MOD+'.bedroll':'Bedroll'})
     write(f'assets/{MOD}/lang/en_us.json',lang)
 if __name__=='__main__':generate(Path(__file__).resolve().parents[1])
