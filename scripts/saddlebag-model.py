@@ -14,9 +14,10 @@ MATERIALS={'leather':(0,0),'strap':(8,0),'metal':(0,8),'lining':(8,8)}
 def face_uv(material,side,size):
     a,b={'north':(0,1),'south':(0,1),'east':(2,1),'west':(2,1),'up':(0,2),'down':(0,2)}[side]
     # A 16px atlas and one UV unit per model unit preserve vanilla texel density
-    # even on tiny buckles/pegs. Top/bottom faces sample lighter/darker leather.
+    # even on tiny buckles/pegs. Tops sample the balanced midtones instead of
+    # stretching the highlighted edge row across a shallow surface.
     w,h=size[a],size[b];u,v=MATERIALS[material]
-    center_v=v+h/2 if side=='up' else v+8-h/2 if side=='down' else v+4
+    center_v=v+8-h/2 if side=='down' else v+4
     return [round(u+4-w/2,6),round(center_v-h/2,6),round(u+4+w/2,6),round(center_v+h/2,6)]
 
 def rotate(point, origin, angles):

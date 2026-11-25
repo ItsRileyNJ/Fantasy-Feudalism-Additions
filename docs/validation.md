@@ -583,3 +583,19 @@ The graphical client passed **124 smoke checks** and a native screenshot was ins
 Replaced the overly yellow draft leather palette with six brown shades sampled from the vanilla horse saddle's top-face UV region (35,0)-(45,9): #4E2C13, #593317, #613A1D, #6F421F, #764928 and #8A552E. Quantized leather, strap and lining tiles to these exact colors without dithering. Preserved every approved silver hardware pixel from 0.1.20; the hardware tile's absolute pixel error remains zero. The 16x16 atlas, one-texel-per-model-unit UVs, shading, no-stitching finish and original geometry remain.
 
 Assembly, the independent model/UV check and all **124 graphical client smoke checks** passed. Rechecked one texel per model unit and the exact embedded atlas. Server gameplay tests were not repeated for this palette-only adjustment.
+
+
+## Saddlebag outline and top shading — 0.1.23 (2026-11-24)
+
+Rearranged the existing six approved saddle-brown shades to soften the conspicuous top highlight and add a restrained one-texel darker border to the bag panels. Upper faces now sample balanced material midtones instead of the brightest upper-edge strip; the bag panels retain darker lower shading. Leather pixels are quantized to the exact 0.1.22 palette without dithering. The approved silver material is copied unchanged, with zero absolute pixel error. No stitching was added. The atlas remains 16x16 with one texel per model unit, and the original mesh/pivots remain intact.
+
+Assembly and independent original-model/UV checks passed.
+
+All **124 graphical client smoke checks** passed, and the actual equipped-donkey preview was inspected. Verified the approved six-color leather palette, unchanged silver tile, embedded atlas and one texel per model unit. Server gameplay tests were not repeated for this visual adjustment.
+
+
+## Outline-only leather variation — 0.1.24 (2026-11-24)
+
+Added restrained highlight/shadow variation to the existing one-texel bag-panel outlines using only #4E2C13, #593317 and #613A1D from the approved brown palette. Composited only the perimeter pixels of the leather/lining tiles onto the approved 0.1.23 atlas. An exhaustive pixel comparison confirms exactly 40 changed outline pixels and zero changes to the 200 pixels outside the outlines, including all interiors, straps and silver hardware. Both panel outlines now contain multiple shades.
+
+Assembly and independent original-model/UV checks passed. The 16x16 atlas and existing vanilla-density UVs are preserved; the editable Blockbench model embeds the exact runtime PNG. The graphical client and gameplay suites were not repeated for this outline-only pixel change; 0.1.23 passed 124 client smoke checks before this adjustment.
