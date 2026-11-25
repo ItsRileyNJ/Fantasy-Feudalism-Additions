@@ -10,7 +10,9 @@
     "LightStateMixin",
     "SunProtectionMixin",
     "LightItemMixin",
-    "LightPlacementMixin"
+    "LightPlacementMixin",
+    "LightItemPlacementMixin",
+    "DebugStickMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -16,3 +16,5 @@ Recipe-book unlocks occur when the appropriate ingredient is obtained. New items
 
 - Hover torches and lanterns to see fuel stages 3/3, 2/3, 1/3 or Empty. Each stage is one-third of the configured burn time. Soul lights show Unlimited.
 - Craft torches with one flint and steel to restore full fuel. Each occupied torch slot supplies one refreshed torch per craft and costs one durability use. Shift-craft for bulk refreshing; the tool is returned until it breaks.
+
+- Creative-mode operators can use a debug stick on a normal lantern: left-click until `lit` is selected, then right-click to set `lit=false`. This empties its fuel and produces a burnt-out lantern. Setting `lit=true` with the debug stick restores full fuel. Crouching/reverse edits work too. Refill a burnt-out lantern normally with oil.

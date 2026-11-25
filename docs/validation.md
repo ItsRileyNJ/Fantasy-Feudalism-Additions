@@ -452,3 +452,15 @@ Saddlebags and the crafting half now use a custom 128×128 atlas: stitched chest
 - Native screenshots inspected the equipped leather/stitching/brass finish and inventory models. `models/Saddlebag-textured.bbmodel` contains the finished mappings and an embedded copy of the atlas for editing. The supplied original remains available as the reference.
 
 Textures were authored for this update. The full external modpack and shaders were not rerun; client verification used base NeoForge.
+
+
+## Administrator debug-stick burnout — 0.1.8 (2026-11-24)
+
+Creative-mode operators can select a normal lantern’s existing `lit` property with the debug stick. A native edit to `lit=false` empties its real saved fuel; `lit=true` restores fuel if empty. Crouching edits reach the debug stick rather than being intercepted by the normal lantern toggle. Native creative/operator permission checks remain authoritative. Ordinary switching off still preserves fuel, and soul/third-party lanterns retain their existing behavior.
+
+The integration test also exposed a pre-existing NeoForge placement issue: the deferred `onPlace` call could overwrite a placed light item’s saved fuel. Fuel is now applied after the placement commits, while direct BlockItem placement remains supported. Cancelled placements do not consume items or create stray fuel records. Cancelled debug-stick edits also leave both the block and its fuel intact.
+
+- Full build: **93 server GameTests passed**, zero failures; shader API detection checks passed.
+- New tests exercise actual debug-stick left/right clicks, standing/hanging/waterlogged/Glow Oil lanterns, persisted empty fuel, permissions, crouching, ordinary toggling, native pickaxe drops, normal item-use replacement, oil refueling and bottle return, partial fuel, cancelled placements, soul lights and subclass lantern fixtures.
+- Release JAR inspection verifies current mixin registration/resources, valid JSON, and exclusion of GameTest classes and third-party JARs.
+- This server-side change was checked through the native item-use integration path. The graphical client and full external modpack were not rerun.

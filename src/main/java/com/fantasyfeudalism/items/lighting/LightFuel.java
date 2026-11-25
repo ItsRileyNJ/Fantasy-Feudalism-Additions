@@ -71,6 +71,13 @@ public final class LightFuel extends SavedData {
         var state = level.getBlockState(pos); var data = get(level);
         data.put(pos.immutable(), new Entry(capacity(state), WeatherLighting.soul(state))); data.setDirty();
     }
+    /** Called only after a native, authorized debug-stick edit has committed. */
+    public static void debugEdit(ServerLevel level,BlockPos pos,BlockState before){
+        var after=level.getBlockState(pos);
+        if(!before.is(Blocks.LANTERN)||!after.is(Blocks.LANTERN)||before.getValue(BlockStateProperties.LIT)==after.getValue(BlockStateProperties.LIT))return;
+        if(!after.getValue(BlockStateProperties.LIT))setRemaining(level,pos,0);
+        else if(remaining(level,pos)==0)refill(level,pos);
+    }
     public static void tick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level) || level.getGameTime() % 20 != 0) return;
         var data = get(level); boolean changed = false;

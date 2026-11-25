@@ -9,6 +9,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class LightInteractions {
     public static void interact(PlayerInteractEvent.RightClickBlock event) {
+        // Let the debug stick handle both forward and crouching/reverse edits itself.
+        if(event.getItemStack().is(Items.DEBUG_STICK))return;
         var level = event.getLevel();
         var pos = event.getPos();
         var state = level.getBlockState(pos);
