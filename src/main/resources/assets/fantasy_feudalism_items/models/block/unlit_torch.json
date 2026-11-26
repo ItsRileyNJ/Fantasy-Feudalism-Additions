@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/torch",
-  "textures": {
-    "torch": "fantasy_feudalism_items:block/burnt_out_torch"
-  }
-}

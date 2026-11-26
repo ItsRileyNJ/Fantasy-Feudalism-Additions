@@ -1,0 +1,49 @@
+{
+  "display": {
+    "icon": {
+      "id": "fantasy_feudalism_additions:trophy_mount"
+    },
+    "title": "Fantasy Feudalism Additions",
+    "description": "Discover medieval and fantasy equipment",
+    "background": "minecraft:textures/block/stone.png",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "equipment": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#fantasy_feudalism_additions:items"
+          }
+        ]
+      }
+    },
+    "clairvoyance": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:potion",
+              "minecraft:splash_potion",
+              "minecraft:lingering_potion"
+            ],
+            "components": {
+              "minecraft:potion_contents": {
+                "potion": "fantasy_feudalism_additions:clairvoyance"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "equipment",
+      "clairvoyance"
+    ]
+  ]
+}

@@ -1,11 +1,11 @@
 {
-  "parent": "fantasy_feudalism_items:block/lit_lantern",
+  "parent": "fantasy_feudalism_additions:block/lit_lantern",
   "overrides": [
     {
       "predicate": {
-        "fantasy_feudalism_items:off": 1
+        "fantasy_feudalism_additions:off": 1
       },
-      "model": "fantasy_feudalism_items:block/unlit_lantern"
+      "model": "fantasy_feudalism_additions:block/unlit_lantern"
     }
   ]
 }

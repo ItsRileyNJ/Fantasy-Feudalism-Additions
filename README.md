@@ -1,4 +1,4 @@
-# Fantasy Feudalism Items
+# Fantasy Feudalism Additions
 
 Minecraft **1.21.1**, NeoForge **21.1.262**, Java **21**. Install the Items JAR on both client and server. Replace previous Items builds rather than installing two versions. Some items still use placeholder textures and models. See [controls](docs/controls.md) and [validation](docs/validation.md).
 
@@ -19,7 +19,7 @@ Minecraft **1.21.1**, NeoForge **21.1.262**, Java **21**. Install the Items JAR 
 - **Spawner Eyes:** zombie, skeleton, spider, cave spider, blaze and magma cube variants. Surround an Eye of Ender with eight corresponding drops. Finds the nearest matching ordinary spawner within 128 blocks in already-loaded chunks. No target costs nothing; successful throws use vanilla flight and 80% recovery. No chunk generation or trial-spawner search.
 - **Mob Trophies:** all nine approved types, ownership and a limit of one placed trophy per type for ordinary players (operators with permission level 2 or higher bypass this placement limit), exclusive attunement, particles, bonuses and drawbacks. Breaking a trophy frees its placement slot so its owner can place a replacement. Right-click another trophy you own to switch attunement, even while holding an item. Your current trophy appears alongside potion effects with its name and trophy icon; hover over it in your inventory for the bonuses and drawbacks. Switching updates it, and losing attunement removes it. Placed trophies face the placing player and keep that direction. Their particles rise slowly while idle and become much denser, faster and more energetic while active. Every attuned player also emits matching particles: red/white/green dust, dark smoke, snowflakes, poison-green dust, gold dust, purple End particles or enchantment particles, according to the trophy. Each player aura emits two particles every second, twice the previous Enderman rate, visible to the player and nearby players. Trophies use the supplied Blockbench stand with stripped spruce and vanilla mob-head textures; the generic Player Trophy uses Steve. Piglin uses the full vanilla piglin head shape, and the Enderman Trophy uses an Enderman head with glowing eyes and is crafted from a Sigil-enchanted Enderman Head. Bogged and Stray trophies and standalone head items include their vanilla outer head layers. See [the detailed rules](docs/approved-additions.md). Heads must receive **Sigil** from the level-30 enchanting-table option before crafting with a Trophy Mount. Sigil has no other effect.
 
-All new items appear in the Fantasy Feudalism Items creative tab. Ingredient-based recipe unlocks and obtain-item advancements are included. Banners, flags and offhand head bonuses are deferred.
+All new items appear in the Fantasy Feudalism Additions creative tab. Ingredient-based recipe unlocks and obtain-item advancements are included. Banners, flags and offhand head bonuses are deferred.
 
 ## Optional integrations
 
@@ -33,7 +33,7 @@ With Mercenaries, its caravan stock offers one saddlebag for 14 emeralds and fou
 
 ## Configuration and development
 
-Server configuration files are under `<world>/serverconfig/`: `fantasy_feudalism_items-server.toml`, `fantasy_feudalism_items-weather.toml`, `fantasy_feudalism_items-fuel.toml`, and `fantasy_feudalism_items-head-drops.toml`. Head-drop defaults are 0.1%, 0.4%, 0.9%, and 1.1% for Looting 0/I/II/III; higher levels use III. Enderman heads use these same configured rates. Player heads retain special acquisition; vanilla Dragon heads are no longer a trophy ingredient.
+Server configuration files are under `<world>/serverconfig/`: `fantasy_feudalism_additions-server.toml`, `fantasy_feudalism_additions-weather.toml`, `fantasy_feudalism_additions-fuel.toml`, and `fantasy_feudalism_additions-head-drops.toml`. Head-drop defaults are 0.1%, 0.4%, 0.9%, and 1.1% for Looting 0/I/II/III; higher levels use III. Enderman heads use these same configured rates. Player heads retain special acquisition; vanilla Dragon heads are no longer a trophy ingredient.
 
 ```sh
 ./gradlew build                  # includes dedicated-server integration tests

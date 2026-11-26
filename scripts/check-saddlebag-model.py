@@ -20,7 +20,7 @@ def check():
             a,b,d,w,h,depth=numbers(raw)
             expected.append(bounds([(c*u+s*t+x+body[0],v+y+body[1],-s*u+c*t+z+body[2])
                                     for u,v,t in product((a,a+w),(b,b+h),(d,d+depth))]))
-    models=ROOT/'src/main/resources/assets/fantasy_feudalism_items/models/item'
+    models=ROOT/'src/main/resources/assets/fantasy_feudalism_additions/models/item'
     equipped=json.loads((models/'saddlebag_equipped.json').read_text());roll=json.loads((models/'sleeping_bag_equipped.json').read_text());actual=[]
     for e in equipped['elements']+roll['elements'][:1]:
         # Undo ItemRenderer centering/entity Y/Z flip and apply the native body pivot.
@@ -46,7 +46,7 @@ def check():
     half=json.loads((models/'saddlebag_half.json').read_text())
     assert len(half['elements'])==7
     for model in (equipped,inventory,half):
-        assert model['textures']['material']=='fantasy_feudalism_items:item/saddlebag_materials'
+        assert model['textures']['material']=='fantasy_feudalism_additions:item/saddlebag_materials'
         for part in model['elements']:
             for face in part['faces'].values():
                 assert face['texture']=='#material' and 'tintindex' not in face

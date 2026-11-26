@@ -5,7 +5,7 @@ import base64, json, math, runpy
 from itertools import product
 from copy import deepcopy
 
-MOD = 'fantasy_feudalism_items'
+MOD = 'fantasy_feudalism_additions'
 PEG = '7b1d31c5-c651-3052-5840-24af49eb1301'
 ROLL = 'c81b87a2-78bd-e66b-886a-d06462ccdc8b'
 NORMALS={'north':(0,0,-1),'south':(0,0,1),'east':(1,0,0),'west':(-1,0,0),'up':(0,1,0),'down':(0,-1,0)}
@@ -147,8 +147,8 @@ def generate(root):
     # This source copy previews the saddlebag atlas. The optional roll has its own runtime model.
     textured_cubes[ROLL].update(box_uv=False,mirror_uv=False,faces={side:{'uv':[8,8,16,16],'texture':0} for side in NORMALS})
     (root/'models/Saddlebag-textured.bbmodel').write_text(json.dumps(textured,indent=2)+'\n')
-    java=root/'src/main/java/com/fantasyfeudalism/items/client/SaddlebagAttachment.java'
-    java.write_text('''package com.fantasyfeudalism.items.client;
+    java=root/'src/main/java/com/fantasyfeudalism/additions/client/SaddlebagAttachment.java'
+    java.write_text('''package com.fantasyfeudalism.additions.client;
 /** Generated from the marked side peg in models/Saddlebag.bbmodel. Body-local units. */
 public final class SaddlebagAttachment {
     private SaddlebagAttachment() {}

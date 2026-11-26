@@ -3,7 +3,7 @@
 from pathlib import Path
 import json,runpy,zipfile,struct,zlib
 ROOT=Path(__file__).resolve().parents[1]/'src/main/resources'
-MOD='fantasy_feudalism_items'
+MOD='fantasy_feudalism_additions'
 def write(path,data):
  p=ROOT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(data,indent=2)+'\n')
 def mod(path,data):write(f'data/{MOD}/{path}',data)
@@ -107,7 +107,7 @@ all_items=[MOD+':'+n for n in ['kelp_oil','glow_oil','vial_of_milk','fishing_tra
 mod('tags/item/items.json',{'replace':False,'values':all_items})
 def obtained(names):return {'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':names}]}}
 clair={'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':['minecraft:potion','minecraft:splash_potion','minecraft:lingering_potion'],'components':{'minecraft:potion_contents':{'potion':MOD+':clairvoyance'}}}]}}
-mod('advancement/root.json',{'display':{'icon':{'id':MOD+':trophy_mount'},'title':'Fantasy Feudalism Items','description':'Discover medieval and fantasy equipment','background':'minecraft:textures/block/stone.png','show_toast':False,'announce_to_chat':False},'criteria':{'equipment':obtained('#'+MOD+':items'),'clairvoyance':clair},'requirements':[['equipment','clairvoyance']]})
+mod('advancement/root.json',{'display':{'icon':{'id':MOD+':trophy_mount'},'title':'Fantasy Feudalism Additions','description':'Discover medieval and fantasy equipment','background':'minecraft:textures/block/stone.png','show_toast':False,'announce_to_chat':False},'criteria':{'equipment':obtained('#'+MOD+':items'),'clairvoyance':clair},'requirements':[['equipment','clairvoyance']]})
 for name,title,description,icon,criterion in [('clairvoyance','A Clearer View','Obtain a Potion of Clairvoyance','minecraft:potion',clair),('animal_allegiance','Animal Allegiance','Obtain a Potion of Animal Allegiance',MOD+':animal_allegiance_potion',obtained([MOD+':animal_allegiance_potion',MOD+':extended_animal_allegiance_potion'])),('saddlebag','Pack for the Road','Obtain a Saddlebag',MOD+':saddlebag',obtained(MOD+':saddlebag')),('horseshoe','A Better Pace','Obtain a Horseshoe',MOD+':iron_horseshoe',obtained([MOD+':'+t+'_horseshoe' for t in ['copper','iron','gold','diamond','netherite']])),('trophy','A Lasting Trophy','Obtain a Mob Trophy',MOD+':zombie_trophy',obtained([MOD+':'+k+'_trophy' for k in head_map])),('fishing_trap','River Harvest','Obtain a Fish Trap',MOD+':fishing_trap',obtained(MOD+':fishing_trap'))]:
  mod('advancement/'+name+'.json',{'parent':MOD+':root','display':{'icon':{'id':icon},'title':title,'description':description,'frame':'task','show_toast':True,'announce_to_chat':True},'criteria':{'obtain':criterion},'requirements':[['obtain']]})
 
@@ -126,7 +126,7 @@ write(f'assets/{MOD}/lang/en_us.json',lang)
 
 # Trophy descriptions are separate translatable lines with shared instructions.
 import re
-source=(ROOT.parents[2]/'src/main/java/com/fantasyfeudalism/items/trophy/TrophyKind.java').read_text()
+source=(ROOT.parents[2]/'src/main/java/com/fantasyfeudalism/additions/trophy/TrophyKind.java').read_text()
 lang=json.loads((ROOT/f'assets/{MOD}/lang/en_us.json').read_text())
 base='tooltip.'+MOD+'.trophy.'
 lang.update({base+'bonus':'While attuned:',base+'drawback':'Drawback:',base+'attune':'Right-click a trophy you own to change your attunement.',base+'limit':'You can place one trophy of each type and attune to one at a time.',base+'replacement':'Breaking a trophy frees its slot. Broken trophies drop nothing.'})
@@ -148,7 +148,7 @@ runpy.run_path(str(Path(__file__).with_name('trophy-models.py')))['generate'](RO
 runpy.run_path(str(Path(__file__).with_name("saddlebag-model.py")))["generate"](ROOT.parents[2])
 
 lang=json.loads((ROOT/f"assets/{MOD}/lang/en_us.json").read_text())
-lang.update({'container.fantasy_feudalism_items.armor': 'Armor', 'container.fantasy_feudalism_items.shoes': 'Shoe', 'container.fantasy_feudalism_items.saddlebags': 'Saddlebags', 'container.fantasy_feudalism_items.bag_storage': 'Saddlebag Storage', 'container.fantasy_feudalism_items.equip_bags': 'Equip saddlebags for storage'})
+lang.update({'container.fantasy_feudalism_additions.armor': 'Armor', 'container.fantasy_feudalism_additions.shoes': 'Shoe', 'container.fantasy_feudalism_additions.saddlebags': 'Saddlebags', 'container.fantasy_feudalism_additions.bag_storage': 'Saddlebag Storage', 'container.fantasy_feudalism_additions.equip_bags': 'Equip saddlebags for storage'})
 write(f"assets/{MOD}/lang/en_us.json",lang)
 
 runpy.run_path(str(Path(__file__).with_name("sleeping-bag-resources.py")))["generate"](ROOT.parents[2])

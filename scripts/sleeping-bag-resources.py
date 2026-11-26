@@ -5,7 +5,7 @@ import json
 import random
 import struct
 import zlib
-MOD='fantasy_feudalism_items'
+MOD='fantasy_feudalism_additions'
 COLORS='white orange magenta light_blue yellow lime pink gray light_gray cyan purple blue brown green red black'.split()
 # Familiar wool midtones. The fabric, stitching, and folds use shades of these colors.
 PALETTES = dict(zip(COLORS, (

@@ -1,6 +1,0 @@
-{
-  "parent": "fantasy_feudalism_items:item/sleeping_bag",
-  "textures": {
-    "fabric": "fantasy_feudalism_items:block/sleeping_bag/yellow"
-  }
-}

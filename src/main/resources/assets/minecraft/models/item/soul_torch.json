@@ -6,9 +6,9 @@
   "overrides": [
     {
       "predicate": {
-        "fantasy_feudalism_items:off": 1
+        "fantasy_feudalism_additions:off": 1
       },
-      "model": "fantasy_feudalism_items:item/burnt_out_torch"
+      "model": "fantasy_feudalism_additions:item/burnt_out_torch"
     }
   ],
   "loader": "neoforge:item_layers",

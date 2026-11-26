@@ -1,0 +1,22 @@
+{
+  "parent": "fantasy_feudalism_additions:root",
+  "display": {
+    "icon": {
+      "id": "fantasy_feudalism_additions:white_sleeping_bag"
+    },
+    "title": "Portable Rest",
+    "description": "Obtain a bedroll"
+  },
+  "criteria": {
+    "sleeping_bag": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#fantasy_feudalism_additions:sleeping_bags"
+          }
+        ]
+      }
+    }
+  }
+}

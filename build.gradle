@@ -3,8 +3,8 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.148'
 }
 version = '0.1.24'
-group = 'com.fantasyfeudalism.items'
-base { archivesName = 'fantasy_feudalism_items' }
+group = 'com.fantasyfeudalism.additions'
+base { archivesName = 'fantasy_feudalism_additions' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 sourceSets {
     shaderTest {
@@ -37,10 +37,10 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             systemProperty 'fantasyfeudalism.testReport', layout.buildDirectory.file("reports/gametest/results.xml").get().asFile.absolutePath
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.hasProperty('compat') ? 'fantasy_feudalism_items,fantasy_feudalism_compat' : 'fantasy_feudalism_items'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.hasProperty('compat') ? 'fantasy_feudalism_additions,fantasy_feudalism_compat' : 'fantasy_feudalism_additions'
         }
     }
-    mods { fantasy_feudalism_items { sourceSet(sourceSets.main); sourceSet(sourceSets.gameTest) } }
+    mods { fantasy_feudalism_additions { sourceSet(sourceSets.main); sourceSet(sourceSets.gameTest) } }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 
@@ -80,7 +80,7 @@ tasks.named('runGameTestServer') {
 tasks.register('shaderCompatibilityTest', JavaExec) {
     dependsOn tasks.named('shaderTestClasses')
     classpath = sourceSets.shaderTest.runtimeClasspath
-    mainClass = 'com.fantasyfeudalism.items.client.ShaderCompatibilityTest'
+    mainClass = 'com.fantasyfeudalism.additions.client.ShaderCompatibilityTest'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }
 }
 tasks.named('check') { dependsOn 'shaderCompatibilityTest' }
@@ -88,7 +88,7 @@ tasks.named('check') { dependsOn 'shaderCompatibilityTest' }
 tasks.register('lanternPhysicsTest', JavaExec) {
     dependsOn tasks.named('shaderTestClasses')
     classpath = sourceSets.shaderTest.runtimeClasspath
-    mainClass = 'com.fantasyfeudalism.items.client.LanternPendulumTest'
+    mainClass = 'com.fantasyfeudalism.additions.client.LanternPendulumTest'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }
 }
 tasks.named('check') { dependsOn 'lanternPhysicsTest' }

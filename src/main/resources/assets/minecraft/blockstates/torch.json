@@ -1,10 +1,10 @@
 {
   "variants": {
     "lit=false": {
-      "model": "fantasy_feudalism_items:block/unlit_torch"
+      "model": "fantasy_feudalism_additions:block/unlit_torch"
     },
     "lit=true": {
-      "model": "fantasy_feudalism_items:block/lit_torch"
+      "model": "fantasy_feudalism_additions:block/lit_torch"
     }
   }
 }

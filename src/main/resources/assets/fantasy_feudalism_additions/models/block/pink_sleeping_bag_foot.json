@@ -1,0 +1,6 @@
+{
+  "parent": "fantasy_feudalism_additions:block/sleeping_bag_foot",
+  "textures": {
+    "fabric": "fantasy_feudalism_additions:block/sleeping_bag/pink"
+  }
+}

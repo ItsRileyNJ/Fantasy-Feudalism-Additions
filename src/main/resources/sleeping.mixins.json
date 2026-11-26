@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.fantasyfeudalism.items.sleep.mixin",
+  "package": "com.fantasyfeudalism.additions.sleep.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": ["PlayerSleepMixin", "ServerSleepMixin", "SleepPositionMixin"],
   "injectors": {"defaultRequire": 1}

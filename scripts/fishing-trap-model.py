@@ -34,7 +34,7 @@ def generate(root):
     textures = {'wood': 'minecraft:block/stripped_spruce_log',
                 'end': 'minecraft:block/stripped_spruce_log_top', 'particle': '#wood'}
     model = {'parent': 'minecraft:block/block', 'textures': textures, 'elements': elements}
-    output = root / 'src/main/resources/assets/fantasy_feudalism_items/models/block/fishing_trap.json'
+    output = root / 'src/main/resources/assets/fantasy_feudalism_additions/models/block/fishing_trap.json'
     output.write_text(json.dumps(model, indent=2) + '\n')
 
 

@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,part=foot": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_foot"
+    },
+    "facing=north,part=head": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_head"
+    },
+    "facing=east,part=foot": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_foot",
+      "y": 90
+    },
+    "facing=east,part=head": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_head",
+      "y": 90
+    },
+    "facing=south,part=foot": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_foot",
+      "y": 180
+    },
+    "facing=south,part=head": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_head",
+      "y": 180
+    },
+    "facing=west,part=foot": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_foot",
+      "y": 270
+    },
+    "facing=west,part=head": {
+      "model": "fantasy_feudalism_additions:block/cyan_sleeping_bag_head",
+      "y": 270
+    }
+  }
+}

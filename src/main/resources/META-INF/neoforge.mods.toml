@@ -2,24 +2,24 @@ modLoader="javafml"
 loaderVersion="[4,)"
 license="Apache-2.0"
 [[mods]]
-modId="fantasy_feudalism_items"
+modId="fantasy_feudalism_additions"
 version="0.1.24"
-displayName="Fantasy Feudalism Items"
+displayName="Fantasy Feudalism Additions"
 description="Medieval and fantasy equipment for the Fantasy Feudalism mod series."
-[[dependencies.fantasy_feudalism_items]]
+[[dependencies.fantasy_feudalism_additions]]
 modId="neoforge"
 type="required"
 versionRange="[21.1.262,21.2)"
 ordering="NONE"
 side="BOTH"
-[[dependencies.fantasy_feudalism_items]]
+[[dependencies.fantasy_feudalism_additions]]
 modId="minecraft"
 type="required"
 versionRange="[1.21.1]"
 ordering="NONE"
 side="BOTH"
 [[mixins]]
-config="fantasy_feudalism_items.mixins.json"
+config="fantasy_feudalism_additions.mixins.json"
 
 [[mixins]]
 config="weather.mixins.json"

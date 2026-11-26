@@ -12,7 +12,7 @@
 - Right-click a Spawner Eye to seek its matching spawner. A failed search does not consume the eye.
 - Enchant a mob head using the third, level-30 enchanting-table offer to apply Sigil. Combine it with a Trophy Mount; place the trophy facing you and right-click it to attune. Its direction stays fixed after placement. Right-click another trophy you own to switch immediately, with an empty hand or while holding an item. The active trophy appears in your status effects with its name and trophy icon; hover over that icon in your inventory to see its benefits and drawbacks. You can have one placed trophy of each type at a time. Breaking a trophy drops nothing but lets its owner place a replacement of that type.
 
-Recipe-book unlocks occur when the appropriate ingredient is obtained. New items and potion forms are also available in the Fantasy Feudalism Items creative tab. Additional recipes and detailed stats are listed in the README.
+Recipe-book unlocks occur when the appropriate ingredient is obtained. New items and potion forms are also available in the Fantasy Feudalism Additions creative tab. Additional recipes and detailed stats are listed in the README.
 
 - Hover torches and lanterns to see fuel stages 3/3, 2/3, 1/3 or Empty. Each stage is one-third of the configured burn time. Soul lights show Unlimited.
 - Craft torches with one flint and steel to restore full fuel. Each occupied torch slot supplies one refreshed torch per craft and costs one durability use. Shift-craft for bulk refreshing; the tool is returned until it breaks.

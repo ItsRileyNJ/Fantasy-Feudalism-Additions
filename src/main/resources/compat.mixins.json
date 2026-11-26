@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.fantasyfeudalism.items.compat.mixin",
+  "package": "com.fantasyfeudalism.additions.compat.mixin",
   "compatibilityLevel": "JAVA_21",
   "injectors": {
     "defaultRequire": 1

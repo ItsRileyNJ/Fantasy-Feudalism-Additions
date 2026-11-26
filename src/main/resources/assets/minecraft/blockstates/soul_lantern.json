@@ -1,16 +1,16 @@
 {
   "variants": {
     "hanging=false,lit=false": {
-      "model": "fantasy_feudalism_items:block/unlit_lantern"
+      "model": "fantasy_feudalism_additions:block/unlit_lantern"
     },
     "hanging=true,lit=false": {
-      "model": "fantasy_feudalism_items:block/unlit_lantern_hanging"
+      "model": "fantasy_feudalism_additions:block/unlit_lantern_hanging"
     },
     "hanging=false,lit=true": {
-      "model": "fantasy_feudalism_items:block/lit_soul_lantern"
+      "model": "fantasy_feudalism_additions:block/lit_soul_lantern"
     },
     "hanging=true,lit=true": {
-      "model": "fantasy_feudalism_items:block/lit_soul_lantern_hanging"
+      "model": "fantasy_feudalism_additions:block/lit_soul_lantern_hanging"
     }
   }
 }

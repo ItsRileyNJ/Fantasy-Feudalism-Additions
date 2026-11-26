@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.fantasyfeudalism.items.trophy.mixin",
+  "package": "com.fantasyfeudalism.additions.trophy.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "HeadEnchantMixin",

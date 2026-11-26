@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/potion",
+  "textures": {
+    "layer0": "fantasy_feudalism_additions:item/vial_of_milk_fill"
+  }
+}

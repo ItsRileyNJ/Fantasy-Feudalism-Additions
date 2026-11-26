@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 from copy import deepcopy
 
-MOD = 'fantasy_feudalism_items'
+MOD = 'fantasy_feudalism_additions'
 # Texture, sheet dimensions, head box dimensions, texture origin. Piglin uses
 # its native wider head plus the full snout, tusks and ears exported below.
 HEADS = {

@@ -1,0 +1,446 @@
+package com.fantasyfeudalism.additions.gametest;
+
+import com.fantasyfeudalism.additions.FeudalAdditions;
+import com.fantasyfeudalism.additions.content.*;
+import com.fantasyfeudalism.additions.lighting.*;
+import com.fantasyfeudalism.additions.mount.*;
+import com.fantasyfeudalism.additions.spawner.SpawnerEyes;
+import com.fantasyfeudalism.additions.trophy.*;
+import java.util.*;
+import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.*;
+import net.minecraft.nbt.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.*;
+import net.minecraft.world.effect.*;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.horse.*;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.*;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.alchemy.*;
+import net.minecraft.world.item.component.*;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.enchantment.*;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.*;
+import net.neoforged.neoforge.gametest.*;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+
+@GameTestHolder(FeudalAdditions.ID)
+@PrefixGameTestTemplate(false)
+public final class ContentTests {
+    private static Player player(GameTestHelper h){return h.makeMockPlayer(GameType.SURVIVAL);}
+    private static void cauldronClick(GameTestHelper h,Player player,BlockPos pos){
+        var hit=new BlockHitResult(Vec3.atCenterOf(pos),Direction.UP,pos,false);
+        MilkCauldron.interact(new PlayerInteractEvent.RightClickBlock(player,InteractionHand.MAIN_HAND,pos,hit));
+    }
+    @GameTest(template="empty")
+    public static void milk_bucket_and_three_vials(GameTestHelper h){
+        var player=player(h);var pos=h.absolutePos(new BlockPos(2,2,2));
+        h.getLevel().setBlockAndUpdate(pos,Blocks.CAULDRON.defaultBlockState());player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.MILK_BUCKET));
+        cauldronClick(h,player,pos);h.assertTrue(h.getLevel().getBlockState(pos).is(Content.MILK_CAULDRON.get()),"Bucket fills a milk cauldron");h.assertTrue(player.getMainHandItem().is(Items.BUCKET),"Milk bucket returns empty bucket");
+        for(int i=0;i<3;i++){player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.GLASS_BOTTLE));cauldronClick(h,player,pos);h.assertTrue(player.getMainHandItem().is(Content.MILK.get()),"Each of three bottles fills with milk");}
+        h.assertTrue(h.getLevel().getBlockState(pos).is(Blocks.CAULDRON),"Three vials empty the cauldron");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void milk_removes_one_negative_effect_and_restores_fractional_food(GameTestHelper h){
+        var player=player(h);player.getFoodData().setFoodLevel(10);
+        var harmful=List.of(MobEffects.POISON,MobEffects.WEAKNESS,MobEffects.MOVEMENT_SLOWDOWN);
+        for(var effect:harmful)player.addEffect(new MobEffectInstance(effect,400,2));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,200,1));
+        player.addEffect(new MobEffectInstance(MobEffects.GLOWING,300,0));
+        player.addEffect(new MobEffectInstance(FeudalAdditions.CLAIRVOYANCE,600,0));
+        var result=Content.MILK.get().finishUsingItem(new ItemStack(Content.MILK.get()),h.getLevel(),player);
+        h.assertTrue(result.is(Items.GLASS_BOTTLE),"Drinking returns a glass bottle");
+        h.assertTrue(harmful.stream().filter(player::hasEffect).count()==2,"One vial removes exactly one harmful effect");
+        for(var effect:harmful)if(player.hasEffect(effect))h.assertTrue(player.getEffect(effect).getDuration()==400&&player.getEffect(effect).getAmplifier()==2,"Other harmful effects retain their full duration and strength");
+        h.assertTrue(player.getEffect(MobEffects.MOVEMENT_SPEED).getDuration()==200&&player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier()==1,"Beneficial effects remain unchanged");
+        h.assertTrue(player.getEffect(MobEffects.GLOWING).getDuration()==300,"Neutral effects remain unchanged");
+        h.assertTrue(player.getEffect(FeudalAdditions.CLAIRVOYANCE).getDuration()==600,"Clairvoyance is preserved");
+        h.assertTrue(player.getFoodData().getFoodLevel()==12,"First vial grants two whole food points");
+        h.assertTrue(player.getPersistentData().getDouble("ff_milk_food_fraction")==.5,"Half point is retained");
+        Content.MILK.get().finishUsingItem(new ItemStack(Content.MILK.get()),h.getLevel(),player);
+        h.assertTrue(player.getFoodData().getFoodLevel()==15,"Two vials restore exactly five points");
+        h.assertTrue(harmful.stream().filter(player::hasEffect).count()==1,"Each additional vial removes one more harmful effect");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void milk_fully_removes_strong_and_infinite_negative_effects(GameTestHelper h){
+        var player=player(h);
+        player.addEffect(new MobEffectInstance(MobEffects.POISON,1200,0));
+        player.addEffect(new MobEffectInstance(MobEffects.POISON,200,3));
+        Content.MILK.get().finishUsingItem(new ItemStack(Content.MILK.get()),h.getLevel(),player);
+        h.assertFalse(player.hasEffect(MobEffects.POISON),"Removal cures the whole effect including its hidden weaker instance");
+        player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,-1,2));
+        Content.MILK.get().finishUsingItem(new ItemStack(Content.MILK.get()),h.getLevel(),player);
+        h.assertFalse(player.hasEffect(MobEffects.WEAKNESS),"Infinite harmful effects are removed entirely");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void milk_without_negative_effects_preserves_benefits_and_bottle_consumption(GameTestHelper h){
+        var player=player(h);
+        var emptyResult=Content.MILK.get().finishUsingItem(new ItemStack(Content.MILK.get()),h.getLevel(),player);
+        h.assertTrue(emptyResult.is(Items.GLASS_BOTTLE),"Milk is safe with no active effects");
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,400,2));
+        player.addEffect(new MobEffectInstance(MobEffects.GLOWING,300,0));
+        var stack=new ItemStack(Content.MILK.get(),2);
+        var result=Content.MILK.get().finishUsingItem(stack,h.getLevel(),player);
+        h.assertTrue(result.is(Content.MILK.get())&&result.getCount()==1,"Only one vial in a stack is consumed");
+        h.assertTrue(player.getInventory().countItem(Items.GLASS_BOTTLE)==1,"Stacked vials return a glass bottle to inventory");
+        h.assertTrue(player.getEffect(MobEffects.DAMAGE_BOOST).getDuration()==400&&player.getEffect(MobEffects.DAMAGE_BOOST).getAmplifier()==2,"Milk with no harmful effects preserves beneficial effects");
+        h.assertTrue(player.getEffect(MobEffects.GLOWING).getDuration()==300,"Milk with no harmful effects preserves neutral effects");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void animal_brewing_has_only_drinkable_forms(GameTestHelper h){
+        var brewer=h.getLevel().getServer().potionBrewing();var item=new ItemStack(Content.MILK.get());
+        Item[] ingredients={Items.NETHER_WART,Items.HONEYCOMB,Items.RABBIT_FOOT,Items.REDSTONE};
+        Item[] outputs={AnimalAllegiance.AWKWARD.get(),AnimalAllegiance.INTERMEDIATE.get(),AnimalAllegiance.NORMAL.get(),AnimalAllegiance.EXTENDED.get()};
+        for(int i=0;i<ingredients.length;i++){h.assertTrue(brewer.hasMix(item,new ItemStack(ingredients[i])),"Milk brewing stage is valid");item=brewer.mix(new ItemStack(ingredients[i]),item);h.assertTrue(item.is(outputs[i]),"Milk brewing produces correct stage");h.assertFalse(brewer.hasMix(item,new ItemStack(Items.GUNPOWDER)),"Milk potion has no splash form");h.assertFalse(brewer.hasMix(item,new ItemStack(Items.DRAGON_BREATH)),"Milk potion has no lingering form");}
+        var contents=new ItemStack(AnimalAllegiance.NORMAL.get()).get(DataComponents.POTION_CONTENTS);var effects=new ArrayList<MobEffectInstance>();contents.forEachEffect(effects::add);h.assertTrue(effects.size()==1&&effects.getFirst().getDuration()==1200,"Normal allegiance lasts one minute");
+        effects.clear();item.get(DataComponents.POTION_CONTENTS).forEachEffect(effects::add);h.assertTrue(effects.getFirst().getDuration()==3600,"Extended allegiance lasts three minutes");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void allegiance_potions_use_opaque_vanilla_layer_tints(GameTestHelper h){
+        for(var item:List.of(AnimalAllegiance.AWKWARD.get(),AnimalAllegiance.INTERMEDIATE.get(),AnimalAllegiance.NORMAL.get(),AnimalAllegiance.EXTENDED.get())){
+            var stack=new ItemStack(item);int liquid=AnimalAllegiance.itemColor(stack,0);
+            h.assertTrue(net.minecraft.util.FastColor.ARGB32.alpha(liquid)==255,"Potion liquid must not disappear through zero-alpha tint");
+            h.assertTrue(AnimalAllegiance.itemColor(stack,1)==-1,"Vanilla glass and stopper layer stays opaque white");
+        }
+        h.assertTrue((AnimalAllegiance.itemColor(new ItemStack(AnimalAllegiance.NORMAL.get()),0)&0xFFFFFF)==0xE3BD74,"Normal potion retains its Animal Allegiance liquid color");
+        h.assertTrue(AnimalAllegiance.itemColor(new ItemStack(AnimalAllegiance.NORMAL.get()),0)==AnimalAllegiance.itemColor(new ItemStack(AnimalAllegiance.EXTENDED.get()),0),"Extended potion uses the same vanilla-style liquid color");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void horseshoe_material_tints_are_distinct_and_opaque(GameTestHelper h){
+        var shoes=List.of(MountContent.COPPER.get(),MountContent.IRON.get(),MountContent.GOLD.get(),MountContent.DIAMOND.get(),MountContent.NETHERITE.get());
+        var colors=new HashSet<Integer>();
+        for(var shoe:shoes){
+            var stack=new ItemStack(shoe);int tint=Horseshoe.itemColor(stack,0);
+            h.assertTrue(net.minecraft.util.FastColor.ARGB32.alpha(tint)==255,"Every horseshoe material tint stays fully visible");
+            h.assertTrue(colors.add(tint),"All five material variants have distinct colors");
+            h.assertTrue(Horseshoe.itemColor(stack,1)==-1,"Only the horseshoe sprite layer is tinted");
+        }
+        h.assertTrue(Horseshoe.itemColor(new ItemStack(Items.STONE),0)==-1,"Other items keep their original color");
+        h.assertTrue(MountContent.COPPER.get().speed==.05&&MountContent.NETHERITE.get().speed==.2&&MountContent.GOLD.get().gold,"Sprite colors preserve existing horseshoe bonuses");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void allegiance_excludes_neutral_and_owned_animals(GameTestHelper h){
+        var cow=h.spawnWithNoFreeWill(EntityType.COW,2,2,2);var wolf=EntityType.WOLF.create(h.getLevel());var horse=EntityType.HORSE.create(h.getLevel());
+        h.assertTrue(AnimalAllegiance.eligible(cow),"Passive cow is eligible");h.assertFalse(AnimalAllegiance.eligible(wolf),"Neutral wolves excluded");
+        horse.setOwnerUUID(UUID.randomUUID());h.assertFalse(AnimalAllegiance.eligible(horse),"Player-owned mounts excluded");h.assertFalse(AnimalAllegiance.eligible(EntityType.GOAT.create(h.getLevel())),"Neutral goats excluded");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void saddlebag_storage_serialization_and_empty_nested_containers(GameTestHelper h){
+        var bag=new ItemStack(MountContent.SADDLEBAG.get());var contents=NonNullList.withSize(27,ItemStack.EMPTY);contents.set(26,new ItemStack(Items.DIAMOND,7));bag.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(contents));
+        var restored=ItemStack.parse(h.getLevel().registryAccess(),bag.save(h.getLevel().registryAccess())).orElseThrow();
+        h.assertTrue(restored.get(DataComponents.CONTAINER).getStackInSlot(26).getCount()==7,"Last of twenty-seven slots survives save/load");
+        h.assertFalse(SaddlebagItem.allowed(restored),"Filled nested bags rejected");h.assertTrue(SaddlebagItem.allowed(new ItemStack(MountContent.SADDLEBAG.get())),"Empty nested bags allowed");
+        var shulker=new ItemStack(Blocks.SHULKER_BOX);h.assertTrue(SaddlebagItem.allowed(shulker),"Empty shulker allowed");shulker.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(List.of(new ItemStack(Items.STONE))));h.assertFalse(SaddlebagItem.allowed(shulker),"Filled shulker rejected");
+        restored.set(DataComponents.DYED_COLOR,new DyedItemColor(0xFF0000,true));
+        var migrated=ItemStack.parse(h.getLevel().registryAccess(),restored.save(h.getLevel().registryAccess())).orElseThrow();
+        h.assertFalse(migrated.has(DataComponents.DYED_COLOR),"Legacy dye is removed on load");
+        h.assertTrue(migrated.get(DataComponents.CONTAINER).getStackInSlot(26).getCount()==7,"Legacy dye cleanup preserves stored cargo");
+        h.assertFalse(migrated.is(net.minecraft.tags.ItemTags.DYEABLE),"Saddlebags no longer belong to the dyeable item tag");
+        for(var dye:List.of(Items.RED_DYE,Items.BLUE_DYE,Items.BLACK_DYE)){
+            var input=CraftingInput.of(2,1,List.of(migrated,new ItemStack(dye)));
+            h.assertFalse(h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,input,h.getLevel()).isPresent(),"Dyes cannot recolor saddlebags");
+        }h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void saddlebag_menu_prevents_moving_open_bag(GameTestHelper h){
+        var player=player(h);var bag=new ItemStack(MountContent.SADDLEBAG.get());player.getInventory().setItem(0,bag);var menu=new BagMenu(9,player.getInventory(),bag);
+        h.assertTrue(menu.getContainer().getContainerSize()==27,"Bag menu has twenty-seven cargo slots");
+        var root=menu.slots.stream().filter(slot->slot.getItem()==bag).findFirst().orElseThrow();h.assertFalse(root.mayPickup(player),"Open bag cannot be picked up into its own inventory");
+        h.assertTrue(menu.quickMoveStack(player,root.index).isEmpty(),"Shift-click cannot move open bag");
+        menu.getContainer().setItem(0,new ItemStack(Items.EMERALD,3));menu.getContainer().setChanged();h.assertTrue(bag.get(DataComponents.CONTAINER).getStackInSlot(0).getCount()==3,"Menu writes directly back to its bag item");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void horseshoes_stack_and_remove_immediately(GameTestHelper h){
+        var horse=h.spawnWithNoFreeWill(EntityType.HORSE,2,2,2);double speed=horse.getAttributeValue(Attributes.MOVEMENT_SPEED),jump=horse.getAttributeValue(Attributes.JUMP_STRENGTH);
+        horse.jumpFromGround();double normalVelocity=horse.getDeltaMovement().y;
+        MountEquipment.set(horse,2,new ItemStack(MountContent.GOLD.get()));MountEquipment.apply(horse);horse.jumpFromGround();
+        h.assertTrue(Math.abs(horse.getAttributeValue(Attributes.MOVEMENT_SPEED)-speed*1.11)<.00001,"Gold adds eleven percent to natural speed");
+        h.assertTrue(Math.abs(MountEquipment.jumpHeight(horse.getDeltaMovement().y)/MountEquipment.jumpHeight(normalVelocity)-1.1)<.00001,"Gold adds ten percent actual jump height");
+        MountEquipment.set(horse,2,ItemStack.EMPTY);MountEquipment.apply(horse);h.assertTrue(Math.abs(horse.getAttributeValue(Attributes.MOVEMENT_SPEED)-speed)<.00001,"Removing shoe removes speed bonus");h.assertTrue(horse.getAttributeValue(Attributes.JUMP_STRENGTH)==jump,"Removing shoe removes jump bonus");
+        h.assertFalse(new ItemStack(MountContent.NETHERITE.get()).isDamageableItem(),"Horseshoes never wear out");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void mount_slots_and_filled_bag_removal(GameTestHelper h){
+        var donkey=h.spawnWithNoFreeWill(EntityType.DONKEY,2,2,2);var inventory=new MountInventory(donkey);var bag=new ItemStack(MountContent.SADDLEBAG.get());
+        inventory.setItem(0,new ItemStack(Items.SADDLE));inventory.setItem(3,new ItemStack(Items.LANTERN));inventory.setItem(4,bag);inventory.setItem(9,new ItemStack(Items.GOLD_INGOT,13));inventory.setChanged();
+        h.assertTrue(donkey.isSaddled(),"Saddle remains independent");h.assertTrue(MountEquipment.item(donkey,3).is(Items.LANTERN),"Lantern remains independent");
+        var removed=inventory.removeItem(4,1);inventory.setChanged();h.assertTrue(removed.get(DataComponents.CONTAINER).getStackInSlot(0).getCount()==13,"Removed bag preserves entire cargo");
+        h.assertTrue(inventory.getItem(9).isEmpty(),"Removing bag removes access to its cargo");h.assertTrue(inventory.getItem(0).is(Items.SADDLE)&&inventory.getItem(3).is(Items.LANTERN),"Bag removal leaves other equipment unchanged");
+        h.assertTrue(inventory.canPlaceItem(2,new ItemStack(MountContent.IRON.get())),"Donkeys have a separate horseshoe slot");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void mount_addons_preserve_cargo_separately(GameTestHelper h) {
+        var mount = EntityType.MULE.create(h.getLevel());
+        var player = player(h);
+        var inventory = new MountInventory(mount);
+        var menu = new MountMenu(1, player.getInventory(), inventory);
+        var packSlot = menu.getSlot(MountInventory.PACK_SLOT);
+        var spyglassSlot = menu.getSlot(MountInventory.SPYGLASS_SLOT);
+        var pack = new ItemStack(MountContent.PACK_STORAGE.get());
+        var spyglass = new ItemStack(Items.SPYGLASS);
+        var cargo = menu.slots.stream().filter(slot -> slot.container == inventory
+                && slot.getSlotIndex() >= MountInventory.PACK_CARGO_START).toList();
+        h.assertTrue(cargo.size() == 20 && cargo.stream().noneMatch(Slot::isActive), "Exactly twenty pack slots start locked");
+        h.assertFalse(packSlot.mayPlace(pack) || spyglassSlot.mayPlace(spyglass), "Addons require saddlebags");
+
+        inventory.setItem(4, new ItemStack(MountContent.SADDLEBAG.get()));
+        inventory.setItem(MountInventory.BAG_CARGO_START, new ItemStack(Items.DIAMOND));
+        h.assertTrue(packSlot.mayPlace(pack) && spyglassSlot.mayPlace(spyglass), "Each addon fits its own slot");
+        h.assertFalse(packSlot.mayPlace(spyglass) || spyglassSlot.mayPlace(pack), "Addons cannot swap slots");
+
+        var input = CraftingInput.of(3, 3, java.util.stream.Stream.of(
+                Items.LEATHER, Items.IRON_INGOT, Items.LEATHER,
+                Items.LEATHER, Items.CHEST, Items.LEATHER,
+                Items.LEAD, Items.LEATHER, Items.LEAD).map(ItemStack::new).toList());
+        var recipe = h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, h.getLevel()).orElseThrow();
+        h.assertTrue(recipe.value().assemble(input, h.getLevel().registryAccess()).is(MountContent.PACK_STORAGE.get()),
+                "Leather, iron, chest and leads craft Pack Storage in the requested pattern");
+
+        packSlot.set(pack);
+        spyglassSlot.set(spyglass);
+        h.assertTrue(menu.hasPack() && cargo.stream().allMatch(Slot::isActive), "Fitting the pack unlocks all twenty cargo slots");
+        h.assertTrue(MountVisuals.packStorage(mount).is(pack.getItem()) && MountVisuals.spyglass(mount).is(Items.SPYGLASS),
+                "Both addons synchronize independently");
+        h.assertFalse(menu.getSlot(4).mayPickup(player) || !menu.quickMoveStack(player, 4).isEmpty(),
+                "Saddlebags cannot be removed with their addons equipped");
+
+        // Fill the standard bag, then shift-click to verify that overflow goes to the pack.
+        for (int j = MountInventory.BAG_CARGO_START + 1; j < MountInventory.PACK_CARGO_START; j++) {
+            inventory.setItem(j, new ItemStack(Items.DIAMOND, 64));
+        }
+        menu.getSlot(36).set(new ItemStack(Items.EMERALD, 7));
+        h.assertTrue(!menu.quickMoveStack(player, 36).isEmpty()
+                && cargo.getFirst().getItem().getCount() == 7, "Shift-click fills the pack after the base bag");
+        cargo.getLast().set(new ItemStack(Items.GOLD_INGOT, 12));
+        h.assertFalse(cargo.get(1).mayPlace(pack), "Pack storage rejects nonempty containers");
+
+        var removed = inventory.removeItem(MountInventory.PACK_SLOT, 1);
+        h.assertTrue(cargo.stream().noneMatch(Slot::isActive) && cargo.getLast().getItem().isEmpty()
+                && removed.get(DataComponents.CONTAINER).getStackInSlot(19).getCount() == 12,
+                "Removing a filled pack preserves its cargo and locks the extra slots");
+        h.assertTrue(inventory.getItem(MountInventory.BAG_CARGO_START).is(Items.DIAMOND), "Base saddlebag cargo is independent");
+        h.assertFalse(menu.getSlot(4).mayPickup(player), "The slotted spyglass still locks saddlebag removal");
+        packSlot.set(removed);
+        h.assertTrue(cargo.getFirst().getItem().is(Items.EMERALD) && cargo.getLast().getItem().getCount() == 12,
+                "Reattaching the pack restores both ends of its cargo grid");
+
+        var restored = EntityType.MULE.create(h.getLevel());
+        restored.load(mount.saveWithoutId(new net.minecraft.nbt.CompoundTag()));
+        var restoredInventory = new MountInventory(restored);
+        h.assertTrue(restoredInventory.getItem(MountInventory.SIZE - 1).getCount() == 12
+                && restoredInventory.getItem(MountInventory.SPYGLASS_SLOT).is(Items.SPYGLASS), "Both addons survive entity save/load");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void two_item_netherite_smithing(GameTestHelper h){
+        var input=new SmithingRecipeInput(ItemStack.EMPTY,new ItemStack(MountContent.DIAMOND.get()),new ItemStack(Items.NETHERITE_INGOT));
+        var recipe=h.getLevel().getRecipeManager().getRecipeFor(RecipeType.SMITHING,input,h.getLevel()).orElseThrow();
+        h.assertTrue(recipe.value().assemble(input,h.getLevel().registryAccess()).is(MountContent.NETHERITE.get()),"Diamond plus ingot upgrades without template");
+        var buffer=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        try{var serializer=new NetheriteHorseshoeRecipe.Serializer();serializer.streamCodec().encode(buffer,new NetheriteHorseshoeRecipe());h.assertTrue(serializer.streamCodec().decode(buffer).matches(input,h.getLevel()),"Smithing recipe synchronizes over the network without object-identity dependence");}finally{buffer.release();}h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void trophy_recipes_require_sigil(GameTestHelper h){
+        var sigil=h.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Trophies.SIGIL);
+        for(var kind:TrophyKind.values()){
+            var head=new ItemStack(Trophies.headItem(kind));var input=CraftingInput.of(2,1,List.of(head,new ItemStack(Content.TROPHY_MOUNT.get())));
+            h.assertTrue(h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,input,h.getLevel()).isEmpty(),"Normal head cannot craft a trophy");
+            head.enchant(sigil,1);var enchanted=CraftingInput.of(2,1,List.of(head,new ItemStack(Content.TROPHY_MOUNT.get())));
+            var recipe=h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,enchanted,h.getLevel()).orElseThrow();
+            h.assertTrue(recipe.value().assemble(enchanted,h.getLevel().registryAccess()).is(Trophies.BLOCKS.get(kind).get().asItem()),"Sigil head produces matching trophy");
+        }h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void sigil_level30_enchanting_costs(GameTestHelper h){
+        var pos=h.absolutePos(new BlockPos(3,2,3));h.getLevel().setBlockAndUpdate(pos,Blocks.ENCHANTING_TABLE.defaultBlockState());
+        for(var offset:EnchantingTableBlock.BOOKSHELF_OFFSETS)h.getLevel().setBlockAndUpdate(pos.offset(offset),Blocks.BOOKSHELF.defaultBlockState());
+        var player=player(h);player.experienceLevel=30;var menu=new EnchantmentMenu(10,player.getInventory(),ContainerLevelAccess.create(h.getLevel(),pos));
+        menu.getSlot(0).set(new ItemStack(Items.ZOMBIE_HEAD));menu.getSlot(1).set(new ItemStack(Items.LAPIS_LAZULI,3));menu.slotsChanged(menu.getSlot(0).container);
+        h.assertTrue(menu.costs[0]==0&&menu.costs[1]==0&&menu.costs[2]==30,"Only the level-30 option is available");h.assertFalse(menu.clickMenuButton(player,0),"Lower options rejected");h.assertTrue(menu.clickMenuButton(player,2),"Level-30 option enchants head");
+        h.assertTrue(menu.getSlot(0).getItem().get(DataComponents.ENCHANTMENTS).entrySet().stream().allMatch(entry->entry.getKey().is(Trophies.SIGIL)),"Only Sigil is applied");
+        h.assertTrue(player.experienceLevel==27,"Normal three-level XP cost");h.assertTrue(menu.getSlot(1).getItem().isEmpty(),"Normal three-lapis cost");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void trophy_history_serialization_and_single_selection(GameTestHelper h){
+        var owner=UUID.randomUUID();var data=new TrophyLedger();h.assertTrue(data.recordPlacement(owner,TrophyKind.ZOMBIE),"First placement succeeds");h.assertFalse(data.recordPlacement(owner,TrophyKind.ZOMBIE),"Duplicate placement rejected");
+        data.attune(owner,TrophyKind.ZOMBIE);data.attune(owner,TrophyKind.SKELETON);h.assertTrue(data.active(owner)==TrophyKind.SKELETON,"Second attunement replaces first");
+        var restored=TrophyLedger.load(data.save(new CompoundTag(),h.getLevel().registryAccess()),h.getLevel().registryAccess());h.assertTrue(restored.active(owner)==TrophyKind.SKELETON&&restored.hasPlaced(owner,TrophyKind.ZOMBIE),"Attunement and permanent history survive restart serialization");
+        restored.clear(owner);h.assertTrue(restored.active(owner)==null&&restored.hasPlaced(owner,TrophyKind.ZOMBIE),"Clearing on death does not permit another placement");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void fishing_roll_order_and_capacity(GameTestHelper h){
+        var queue=new ArrayDeque<Double>(List.of(.1));h.assertTrue(FishingTrapEntity.roll(queue::remove)==FishingTrapEntity.CatchType.FISH&&queue.isEmpty(),"Fish success never rolls junk");
+        queue=new ArrayDeque<>(List.of(.5,.1,.79));h.assertTrue(FishingTrapEntity.roll(queue::remove)==FishingTrapEntity.CatchType.JUNK,"Failed fish then successful catch selects eighty-percent junk");
+        queue=new ArrayDeque<>(List.of(.5,.1,.8));h.assertTrue(FishingTrapEntity.roll(queue::remove)==FishingTrapEntity.CatchType.TREASURE,"Twenty-percent treasure boundary");
+        queue=new ArrayDeque<>(List.of(.5,.5));h.assertTrue(FishingTrapEntity.roll(queue::remove)==FishingTrapEntity.CatchType.NOTHING,"Both failed rolls catch nothing");
+        var trap=new FishingTrapEntity(h.absolutePos(BlockPos.ZERO),Content.FISHING_TRAP.get().defaultBlockState());trap.setLevel(h.getLevel());
+        var list=new ListTag();for(int i=0;i<8;i++)list.add(new ItemStack(Items.SALMON).save(h.getLevel().registryAccess()));var nbt=new CompoundTag();nbt.put("Catches",list);nbt.putInt("Elapsed",1234);trap.loadCustomOnly(nbt,h.getLevel().registryAccess());
+        trap.attempt(h.getLevel());h.assertTrue(trap.catches().size()==8&&trap.elapsed()==1234,"Full trap does not exceed eight shared catches");
+        var restored=new FishingTrapEntity(trap.getBlockPos(),trap.getBlockState());restored.loadCustomOnly(trap.saveCustomOnly(h.getLevel().registryAccess()),h.getLevel().registryAccess());h.assertTrue(restored.catches().size()==8&&restored.elapsed()==1234,"Catch inventory and timer survive restart");
+        var player=player(h);trap.collect(player);h.assertTrue(trap.catches().isEmpty()&&player.getInventory().countItem(Items.SALMON)==8,"Right-click collection takes all catches");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void spawner_eye_matches_mob_and_chooses_nearest(GameTestHelper h){
+        var origin=h.absolutePos(new BlockPos(1,2,1));var near=origin.offset(2,0,0);var far=origin.offset(4,0,0);
+        for(var pos:List.of(near,far)){h.getLevel().setBlockAndUpdate(pos,Blocks.SPAWNER.defaultBlockState());((SpawnerBlockEntity)h.getLevel().getBlockEntity(pos)).setEntityId(EntityType.ZOMBIE,h.getLevel().random);}
+        h.assertTrue(SpawnerEyes.find(h.getLevel(),origin,"zombie").orElseThrow().equals(near),"Nearest matching spawner found");h.assertTrue(SpawnerEyes.find(h.getLevel(),origin,"blaze").isEmpty(),"Different mob type excluded");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void dagger_stats_and_armor_only_penetration(GameTestHelper h){
+        var player=player(h);player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Content.BONE_DAGGER.get()));
+        var victim=h.spawnWithNoFreeWill(EntityType.COW,3,2,3);victim.getAttribute(Attributes.ARMOR).setBaseValue(20);
+        float before=victim.getHealth();victim.hurt(h.getLevel().damageSources().playerAttack(player),10);
+        h.assertTrue(Math.abs((before-victim.getHealth())-4.88)<.001,"Twenty percent bypasses armor while eighty percent uses normal armor calculation");
+        var dagger=new ItemStack(Content.BONE_DAGGER.get());h.assertTrue(dagger.getMaxDamage()==100,"Dagger has one hundred durability");h.assertTrue(Content.BONE_DAGGER.get().isValidRepairItem(dagger,new ItemStack(Items.FLINT)),"Dagger repairs with flint");
+        h.assertFalse(EntityType.ZOMBIE.create(h.getLevel()).canHoldItem(dagger),"Mobs cannot pick up dagger");
+        var protection=h.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.PROTECTION);
+        var chest=new ItemStack(Items.DIAMOND_CHESTPLATE);chest.enchant(protection,4);victim.setItemSlot(EquipmentSlot.CHEST,chest);victim.setHealth(20);victim.invulnerableTime=0;
+        float protectedBefore=victim.getHealth();victim.hurt(h.getLevel().damageSources().playerAttack(player),10);h.assertTrue(protectedBefore-victim.getHealth()<4.88,"Protection still reduces armor-penetrating damage");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void dagger_accepts_exactly_sword_enchantments(GameTestHelper h){
+        var dagger=new ItemStack(Content.BONE_DAGGER.get());var sword=new ItemStack(Items.IRON_SWORD);
+        for(var enchantment:h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT))h.assertTrue(enchantment.isSupportedItem(dagger)==enchantment.isSupportedItem(sword),"Dagger enchantment pool must match a vanilla sword: "+enchantment.description().getString());
+        h.succeed();
+    }
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void fuel_exhaustion_and_soul_immunity(GameTestHelper h){
+        var pos=h.absolutePos(new BlockPos(2,2,2));h.getLevel().setBlockAndUpdate(pos.below(),Blocks.STONE.defaultBlockState());h.getLevel().setBlockAndUpdate(pos,Blocks.LANTERN.defaultBlockState());
+        LightFuel.setRemaining(h.getLevel(),pos,1);
+        h.succeedWhen(()->{h.assertFalse(h.getLevel().getBlockState(pos).getValue(BlockStateProperties.LIT),"Fuel exhaustion switches off lantern");h.assertTrue(LightFuel.remaining(h.getLevel(),pos)==0,"Fuel stops at zero");});
+    }
+    @GameTest(template="empty")
+    public static void light_item_fuel_and_refill_rules(GameTestHelper h){
+        var lantern=new ItemStack(Items.LANTERN);LightItemFuel.set(lantern,100,false);MountEquipment.refill(lantern);h.assertFalse(MountEquipment.lit(lantern),"Refilling nonempty switched-off lantern preserves off state");
+        LightItemFuel.set(lantern,0,false);MountEquipment.refill(lantern);h.assertTrue(MountEquipment.lit(lantern),"Refilling an empty lantern switches it on");
+        var restored=ItemStack.parse(h.getLevel().registryAccess(),lantern.save(h.getLevel().registryAccess())).orElseThrow();h.assertTrue(LightItemFuel.remaining(restored)==LightFuel.capacity(Blocks.LANTERN.defaultBlockState()),"Full fuel persists on item");h.assertTrue(LightItemFuel.remaining(new ItemStack(Items.SOUL_LANTERN))==Long.MAX_VALUE,"Soul lights have no finite fuel budget");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void soul_light_protection_respects_radius_and_walls(GameTestHelper h){
+        var pos=h.absolutePos(new BlockPos(1,2,1));h.getLevel().setBlockAndUpdate(pos.below(),Blocks.STONE.defaultBlockState());h.getLevel().setBlockAndUpdate(pos,Blocks.SOUL_TORCH.defaultBlockState());
+        var zombie=h.spawnWithNoFreeWill(EntityType.ZOMBIE,4,2,1);h.assertTrue(LightFuel.protectedFromSun(zombie),"Nearby soul torch protects sunlight-vulnerable mob");
+        h.getLevel().setBlockAndUpdate(pos.offset(2,0,0),Blocks.STONE.defaultBlockState());h.getLevel().setBlockAndUpdate(pos.offset(2,1,0),Blocks.STONE.defaultBlockState());h.assertFalse(LightFuel.protectedFromSun(zombie),"Solid wall blocks soul protection");
+        zombie.setPos(Vec3.atCenterOf(pos.offset(8,0,0)));h.assertFalse(LightFuel.protectedFromSun(zombie),"Soul torch range is only six blocks");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void mounted_fuel_uses_world_clock_not_mount_age(GameTestHelper h){
+        var horse=EntityType.DONKEY.create(h.getLevel());horse.setPos(Vec3.atCenterOf(h.absolutePos(new BlockPos(2,2,2))));horse.tickCount=7;
+        var lantern=new ItemStack(Items.LANTERN);LightItemFuel.set(lantern,100,true);MountEquipment.set(horse,3,lantern);
+        h.succeedWhen(()->{
+            h.assertTrue(h.getLevel().getGameTime()%20==0,"Wait for the fuel clock boundary");
+            MountEquipment.tick(new net.neoforged.neoforge.event.tick.EntityTickEvent.Post(horse));
+            h.assertTrue(LightItemFuel.stage(MountEquipment.item(horse,3))==1,"Partial burning leaves the shared stage unchanged");
+            h.assertTrue(horse.getPersistentData().getCompound("ff_light_progress").getCompound("mounted").getLong("Elapsed")==20,"Mounted countdown runs on the holder rather than the item, independent of mount age");
+        });
+    }
+
+    @GameTest(template="empty")
+    public static void light_render_reads_and_hand_updates_preserve_item_identity(GameTestHelper h){
+        var lamp=new ItemStack(Items.LANTERN);var changed=lamp.copy();LightItemFuel.set(changed,80,true);
+        h.assertTrue(LightItemFuel.sameHeldLight(lamp,changed),"Burning fuel must not replay hand equip animation");
+        LightItemFuel.set(changed,0,false);h.assertTrue(LightItemFuel.sameHeldLight(lamp,changed),"Light switches do not put away the held item");
+        changed.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Named lantern"));
+        h.assertFalse(LightItemFuel.sameHeldLight(lamp,changed),"Other item changes remain visible to the equip hook");
+        h.assertFalse(LightItemFuel.sameHeldLight(lamp,new ItemStack(Items.SOUL_LANTERN)),"Switching lantern type still equips");
+        var data=lamp.getComponents();for(int i=0;i<10000;i++)h.assertTrue(LightItemFuel.lit(lamp),"Fresh lantern remains lit");
+        h.assertTrue(lamp.getComponents()==data,"Render reads never replace item data");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void mount_visuals_sync_only_when_appearance_changes(GameTestHelper h){
+        var horse=EntityType.DONKEY.create(h.getLevel());var lamp=new ItemStack(Items.LANTERN);LightItemFuel.set(lamp,100,true);MountEquipment.set(horse,3,lamp);
+        var data=horse.getData(com.fantasyfeudalism.additions.content.ModAttachments.MOUNT);var decoded=MountVisuals.lantern(horse);
+        LightItemFuel.set(lamp,80,true);MountEquipment.set(horse,3,lamp);
+        h.assertTrue(data==horse.getData(com.fantasyfeudalism.additions.content.ModAttachments.MOUNT),"Timer-only updates do not resend mount visuals");
+        h.assertTrue(decoded==MountVisuals.lantern(horse),"Repeated frames reuse decoded items");
+        h.assertTrue(LightItemFuel.stage(MountEquipment.item(horse,3))==1,"Server saves the shared fuel stage");
+        LightItemFuel.set(lamp,0,false);MountEquipment.set(horse,3,lamp);
+        h.assertTrue(data!=horse.getData(com.fantasyfeudalism.additions.content.ModAttachments.MOUNT),"Light-off transition is synchronized");
+        h.assertFalse(LightItemFuel.lit(MountVisuals.lantern(horse)),"Cached light updates after attachment replacement");h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void mount_menu_separates_saddle_bags_and_cargo(GameTestHelper h){
+        var player=h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        for(var type:java.util.List.of(EntityType.DONKEY,EntityType.MULE)){
+            var mount=type.create(h.getLevel());mount.setTamed(true);var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
+            h.assertTrue(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110&&menu.getSlot(5).x==130&&menu.getSlot(3).x==150,"Separate saddle, saddlebag and lantern equipment positions");
+            h.assertTrue(menu.getSlot(0).mayPlace(new ItemStack(Items.SADDLE)),"Saddle belongs in dedicated saddle slot");
+            h.assertFalse(menu.getSlot(0).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag cannot replace a saddle");
+            h.assertTrue(menu.getSlot(4).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag belongs in its own equipment slot");
+            h.assertFalse(menu.getSlot(4).mayPlace(new ItemStack(Items.SADDLE)),"Saddle cannot replace a bag");
+            h.assertFalse(menu.getSlot(9).isActive(),"Cargo is disabled without saddlebags");
+            inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));menu.refreshLayout();
+            h.assertTrue(menu.getSlot(9).isActive()&&menu.getSlot(9).y==82,"Equipping bag enables a separate cargo grid");
+            h.assertTrue(menu.getSlot(36).y==154,"Player inventory stays below cargo");
+            inventory.removeItemNoUpdate(4);inventory.setChanged();
+            h.assertFalse(menu.getSlot(9).isActive(),"Removing the bag removes cargo access");
+            h.assertFalse(menu.getSlot(9).mayPlace(new ItemStack(Items.EMERALD)),"No quick-move or click can store cargo without a bag");
+            h.assertFalse(menu.getSlot(9).mayPickup(player),"Disabled cargo cannot be picked up");
+            h.assertFalse(mount.hasChest(),"Mount gains no vanilla chest inventory");
+            menu.getSlot(36).set(new ItemStack(Items.EMERALD));
+            h.assertTrue(menu.quickMoveStack(player,36).isEmpty(),"Shift-click cannot create cargo storage without bags");
+            h.assertTrue(menu.getSlot(36).getItem().is(Items.EMERALD)&&inventory.getItem(9).isEmpty(),"Rejected cargo stays in the player inventory");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void mount_layout_reflows_without_changing_slot_identity_or_cargo(GameTestHelper h){
+        var player=player(h);var mount=EntityType.MULE.create(h.getLevel());mount.setTamed(true);
+        var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
+        int count=menu.slots.size();var equipment=menu.getSlot(4);var cargo=menu.getSlot(9);
+        h.assertTrue(menu.panelHeight()==180&&menu.getSlot(36).y==98,"Unfitted mount uses compact inventory");
+        var bag=new ItemStack(MountContent.SADDLEBAG.get());bag.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(List.of(new ItemStack(Items.EMERALD,9))));
+        menu.getSlot(36).set(bag);h.assertFalse(menu.quickMoveStack(player,36).isEmpty(),"Shift-click equips saddlebags");
+        h.assertTrue(menu.hasCargo()&&menu.panelHeight()==236&&menu.getSlot(36).y==154,"Equipping bag expands cargo and moves player slots");
+        h.assertTrue(menu.getSlot(9).getItem().getCount()==9,"Expansion exposes existing bag cargo intact");
+        h.assertTrue(menu.getSlot(4)==equipment&&menu.getSlot(9)==cargo&&menu.slots.size()==count,"Equipment and cargo slots stay stable across reflow");
+        h.assertFalse(menu.quickMoveStack(player,4).isEmpty(),"Shift-click removes bag with cargo");
+        h.assertFalse(menu.hasCargo()||menu.getSlot(9).isActive(),"Removing bag collapses and disables cargo");
+        h.assertTrue(menu.panelHeight()==180&&menu.getSlot(36).y==98,"Player inventory returns to compact position");
+        h.assertTrue(player.getInventory().items.stream().filter(stack->stack.is(MountContent.SADDLEBAG.get())).count()==1,"Exactly one bag remains after reflow");
+        var restored=player.getInventory().items.stream().filter(stack->stack.is(MountContent.SADDLEBAG.get())).findFirst().orElseThrow();
+        h.assertTrue(restored.get(DataComponents.CONTAINER).getStackInSlot(0).getCount()==9,"Removing bag preserves every stored item");
+        for(int i=0;i<menu.slots.size();i++)h.assertTrue(menu.getSlot(i).index==i,"Network slot indices remain stable");h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void horses_reject_lanterns_and_return_legacy_equipment(GameTestHelper h){
+        var horse=h.spawnWithNoFreeWill(EntityType.HORSE,2,2,2);horse.setTamed(true);
+        var player=player(h);var menu=new MountMenu(1,player.getInventory(),new MountInventory(horse));
+        h.assertFalse(menu.getSlot(3).isActive()||menu.getSlot(3).mayPlace(new ItemStack(Items.LANTERN)),"Horse lantern slot is hidden and rejects equipment");
+        var old=new ItemStack(Items.LANTERN);LightItemFuel.setStage(old,1,false);MountEquipment.set(horse,3,old);
+        MountEquipment.join(new net.neoforged.neoforge.event.entity.EntityJoinLevelEvent(horse,h.getLevel()));
+        h.assertTrue(MountEquipment.item(horse,3).isEmpty(),"Legacy horse slot is cleared");
+        var drops=h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,horse.getBoundingBox().inflate(2),e->e.getItem().is(Items.LANTERN));
+        h.assertTrue(drops.size()==1&&LightItemFuel.stage(drops.getFirst().getItem())==1&&!LightItemFuel.lit(drops.getFirst().getItem()),"Legacy lantern is returned with fuel intact");
+        MountEquipment.join(new net.neoforged.neoforge.event.entity.EntityJoinLevelEvent(horse,h.getLevel()));
+        h.assertTrue(h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,horse.getBoundingBox().inflate(2),e->e.getItem().is(Items.LANTERN)).size()==1,"Migration cannot duplicate the lantern");h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void donkey_and_mule_horseshoes_apply_half_bonuses(GameTestHelper h){
+        for(var type:List.of(EntityType.DONKEY,EntityType.MULE)){
+            var mount=type.create(h.getLevel());double speed=mount.getAttributeValue(Attributes.MOVEMENT_SPEED);
+            mount.jumpFromGround();double natural=mount.getDeltaMovement().y;
+            var inv=new MountInventory(mount);inv.setItem(2,new ItemStack(MountContent.GOLD.get()));MountEquipment.apply(mount);mount.jumpFromGround();
+            h.assertTrue(Math.abs(mount.getAttributeValue(Attributes.MOVEMENT_SPEED)-speed*1.055)<.00001,"Gold grants half the horse speed bonus");
+            h.assertTrue(Math.abs(MountEquipment.jumpHeight(mount.getDeltaMovement().y)/MountEquipment.jumpHeight(natural)-1.05)<.00001,"Gold grants five percent actual jump height");
+            var damage=new net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent(mount,new net.neoforged.neoforge.common.damagesource.DamageContainer(h.getLevel().damageSources().fall(),10));MountEquipment.damage(damage);
+            h.assertTrue(Math.abs(damage.getAmount()-8.25)<.0001,"Gold grants 17.5 percent fall reduction");
+            h.assertTrue(MountVisuals.shoe(mount).is(MountContent.GOLD.get()),"Material synchronizes for hoof rendering");
+            inv.removeItem(2,1);inv.setChanged();h.assertTrue(Math.abs(mount.getAttributeValue(Attributes.MOVEMENT_SPEED)-speed)<.00001&&MountVisuals.shoe(mount).isEmpty(),"Removing shoe clears bonuses and hoof material");
+        }h.succeed();
+    }
+
+}

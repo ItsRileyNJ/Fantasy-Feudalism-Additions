@@ -1,0 +1,87 @@
+package com.fantasyfeudalism.additions.trophy;
+
+import com.mojang.serialization.MapCodec;
+import net.minecraft.core.*;
+import net.minecraft.world.*;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+
+public final class TrophyBlock extends BaseEntityBlock {
+    public static final MapCodec<TrophyBlock> CODEC = simpleCodec(properties -> new TrophyBlock(TrophyKind.ZOMBIE, properties));
+    public final TrophyKind kind;
+    public TrophyBlock(TrophyKind kind, Properties properties) { super(properties); this.kind = kind; registerDefaultState(defaultBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING,Direction.NORTH)); }
+    @Override protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block,BlockState> builder){
+        builder.add(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING);
+    }
+    @Override public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context){
+        return defaultBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING,context.getHorizontalDirection().getOpposite());
+    }
+    @Override protected BlockState rotate(BlockState state,Rotation rotation){return state.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING,rotation.rotate(state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)));}
+    @Override protected BlockState mirror(BlockState state,Mirror mirror){return rotate(state,mirror.getRotation(state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)));}
+    @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+    @Override protected RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
+    @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return net.minecraft.world.phys.shapes.Shapes.or(
+            Block.box(3, 0, 3, 13, 2, 13), Block.box(6, 2, 6, 10, 3, 10),
+            Block.box(7, 3, 7, 9, 6, 9), Block.box(4, 6, 4, 12, 14, 12));
+    }
+    @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new TrophyEntity(pos, state); }
+    @Override public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        if (!level.isClientSide && placer instanceof Player player && level.getBlockEntity(pos) instanceof TrophyEntity trophy) {
+            trophy.owner = player.getUUID(); trophy.setChanged();
+            TrophyLedger.get((net.minecraft.server.level.ServerLevel) level).recordAdditionalPlacement(player.getUUID(), kind);
+        }
+    }
+    @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (level.getBlockEntity(pos) instanceof TrophyEntity trophy && player.getUUID().equals(trophy.owner)) {
+            useWithoutItem(state, level, pos, player, hit);
+            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        }
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+    @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (level.getBlockEntity(pos) instanceof TrophyEntity trophy && player.getUUID().equals(trophy.owner)) {
+            if (!level.isClientSide) {
+                TrophyLedger.get((net.minecraft.server.level.ServerLevel) level).attune(player.getUUID(), kind);
+                TrophyEffects.changed(player);
+                player.setData(com.fantasyfeudalism.additions.content.ModAttachments.TROPHY,kind.ordinal());
+                player.getPersistentData().putString("fantasy_feudalism_trophy", kind.name());
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.fantasy_feudalism_additions.attuned", net.minecraft.network.chat.Component.translatable("block.fantasy_feudalism_additions." + kind.id() + "_trophy")), true);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+        return InteractionResult.PASS;
+    }
+    @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){
+        if(!state.is(next.getBlock())&&level instanceof net.minecraft.server.level.ServerLevel server&&level.getBlockEntity(pos) instanceof TrophyEntity trophy&&trophy.owner!=null){
+            var ledger=TrophyLedger.get(server);
+            ledger.releasePlacement(trophy.owner,kind);
+            if(!ledger.hasPlaced(trophy.owner,kind)&&ledger.active(trophy.owner)==kind){ledger.clear(trophy.owner);var owner=server.getServer().getPlayerList().getPlayer(trophy.owner);if(owner!=null){TrophyEffects.changed(owner);owner.setData(com.fantasyfeudalism.additions.content.ModAttachments.TROPHY,-1);owner.getPersistentData().remove("fantasy_feudalism_trophy");}}
+        }
+        super.onRemove(state,level,pos,next,moving);
+    }
+    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return level.isClientSide ? null : createTickerHelper(type, Trophies.BLOCK_ENTITY.get(), TrophyEntity::tick);
+    }
+    public static final class TrophyItem extends BlockItem {
+        final TrophyKind kind;
+        public TrophyItem(TrophyBlock block, Properties properties) { super(block, properties); kind = block.kind; }
+        @Override public InteractionResult place(net.minecraft.world.item.context.BlockPlaceContext context) {
+            if (!context.getLevel().isClientSide && context.getPlayer() != null && !context.getPlayer().hasPermissions(2)
+                && TrophyLedger.get((net.minecraft.server.level.ServerLevel) context.getLevel()).hasPlaced(context.getPlayer().getUUID(), kind)) {
+                context.getPlayer().displayClientMessage(net.minecraft.network.chat.Component.translatable("message.fantasy_feudalism_additions.trophy_limit"), true);
+                return InteractionResult.FAIL;
+            }
+            return super.place(context);
+        }
+        @Override public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<net.minecraft.network.chat.Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
+            kind.appendTooltip(tooltip);
+        }
+    }
+}

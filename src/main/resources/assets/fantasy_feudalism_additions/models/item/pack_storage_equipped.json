@@ -1,0 +1,146 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "leather": "fantasy_feudalism_additions:item/pack_storage",
+    "hardware": "fantasy_feudalism_additions:item/saddlebag_materials",
+    "particle": "#leather"
+  },
+  "elements": [
+    {
+      "from": [
+        7,
+        18,
+        3
+      ],
+      "to": [
+        9,
+        19,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3.0,
+            11.5,
+            5.0,
+            12.5
+          ],
+          "texture": "#hardware"
+        },
+        "south": {
+          "uv": [
+            3.0,
+            11.5,
+            5.0,
+            12.5
+          ],
+          "texture": "#hardware"
+        },
+        "east": {
+          "uv": [
+            3.5,
+            11.5,
+            4.5,
+            12.5
+          ],
+          "texture": "#hardware"
+        },
+        "west": {
+          "uv": [
+            3.5,
+            11.5,
+            4.5,
+            12.5
+          ],
+          "texture": "#hardware"
+        },
+        "up": {
+          "uv": [
+            3.0,
+            11.5,
+            5.0,
+            12.5
+          ],
+          "texture": "#hardware"
+        },
+        "down": {
+          "uv": [
+            3.0,
+            15.0,
+            5.0,
+            16.0
+          ],
+          "texture": "#hardware"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        16,
+        4
+      ],
+      "to": [
+        15,
+        20,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.5,
+            8,
+            7.5,
+            12
+          ],
+          "texture": "#leather"
+        },
+        "south": {
+          "uv": [
+            0.5,
+            8,
+            7.5,
+            12
+          ],
+          "texture": "#leather"
+        },
+        "east": {
+          "uv": [
+            9.0,
+            8,
+            11.5,
+            12
+          ],
+          "texture": "#leather"
+        },
+        "west": {
+          "uv": [
+            9.0,
+            8,
+            11.5,
+            12
+          ],
+          "texture": "#leather"
+        },
+        "up": {
+          "uv": [
+            0.5,
+            1,
+            7.5,
+            6
+          ],
+          "texture": "#leather"
+        },
+        "down": {
+          "uv": [
+            0.5,
+            1,
+            7.5,
+            6
+          ],
+          "texture": "#leather"
+        }
+      }
+    }
+  ]
+}
