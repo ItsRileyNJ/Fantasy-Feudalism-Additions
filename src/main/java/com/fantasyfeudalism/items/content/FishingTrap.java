@@ -10,17 +10,53 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.*;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 public final class FishingTrap extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public static final MapCodec<FishingTrap> CODEC = simpleCodec(FishingTrap::new);
-    public FishingTrap(Properties properties) { super(properties); registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.WATERLOGGED, true)); }
-    @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
-    @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(BlockStateProperties.WATERLOGGED); }
-    @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return context.getLevel().getFluidState(context.getClickedPos()).is(Fluids.WATER) ? defaultBlockState() : null;
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
+    public FishingTrap(Properties properties) {
+        super(properties);
+        // The unrotated model opens west, including traps saved before facing was added.
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.WEST)
+                .setValue(BlockStateProperties.WATERLOGGED, true));
     }
+
+    @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING, BlockStateProperties.WATERLOGGED);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        var pos = context.getClickedPos();
+        if (!context.getLevel().getFluidState(pos).is(Fluids.WATER)) return null;
+
+        var facing = context.getHorizontalDirection().getOpposite();
+        var player = context.getPlayer();
+        if (player != null) {
+            var offset = player.position().subtract(Vec3.atCenterOf(pos));
+            if (offset.horizontalDistanceSqr() > 0) facing = Direction.getNearest(offset.x, 0, offset.z);
+        }
+        return defaultBlockState().setValue(FACING, facing);
+    }
+
+    @Override
+    protected BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    protected BlockState mirror(BlockState state, Mirror mirror) {
+        return rotate(state, mirror.getRotation(state.getValue(FACING)));
+    }
+
     @Override protected FluidState getFluidState(BlockState state) { return state.getValue(BlockStateProperties.WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state); }
     @Override protected BlockState updateShape(BlockState state, Direction direction, BlockState neighbor, LevelAccessor level, BlockPos pos, BlockPos other) {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));

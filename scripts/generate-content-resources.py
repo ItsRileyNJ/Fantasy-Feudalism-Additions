@@ -26,8 +26,9 @@ heads=['zombie_head','skeleton_skull','creeper_head','wither_skeleton_skull','pi
 mod('tags/item/sigil_heads.json',{'replace':False,'values':['minecraft:'+h for h in heads]+[MOD+':stray_head',MOD+':bogged_head',MOD+':enderman_head']})
 mod('enchantment/sigil.json',{'description':{'translate':'enchantment.'+MOD+'.sigil'},'supported_items':'#'+MOD+':sigil_heads','primary_items':'#'+MOD+':sigil_heads','weight':1,'max_level':1,'min_cost':{'base':30,'per_level_above_first':0},'max_cost':{'base':100,'per_level_above_first':0},'anvil_cost':1,'slots':['head'],'effects':{}})
 lang=json.loads((ROOT/f'assets/{MOD}/lang/en_us.json').read_text())
-for name in ['kelp_oil','glow_oil','vial_of_milk','fishing_trap','trophy_mount','saddlebag','saddlebag_half','pack_storage','bone_dagger','stray_head','bogged_head','enderman_head','copper_horseshoe','iron_horseshoe','gold_horseshoe','diamond_horseshoe','netherite_horseshoe','awkward_milk_potion','intermediate_milk_potion','animal_allegiance_potion','extended_animal_allegiance_potion']:
+for name in ['kelp_oil','glow_oil','vial_of_milk','trophy_mount','saddlebag','saddlebag_half','pack_storage','bone_dagger','stray_head','bogged_head','enderman_head','copper_horseshoe','iron_horseshoe','gold_horseshoe','diamond_horseshoe','netherite_horseshoe','awkward_milk_potion','intermediate_milk_potion','animal_allegiance_potion','extended_animal_allegiance_potion']:
  lang['item.'+MOD+'.'+name]=' '.join(w.capitalize() for w in name.split('_'))
+lang['block.'+MOD+'.fishing_trap']='Fish Trap'
 lang['item.'+MOD+'.animal_allegiance_potion']='Potion of Animal Allegiance'
 lang['item.'+MOD+'.extended_animal_allegiance_potion']='Potion of Animal Allegiance'
 lang['effect.'+MOD+'.animal_allegiance']='Animal Allegiance'
@@ -42,7 +43,10 @@ model('item/bone_dagger',{'parent':'minecraft:item/handheld','textures':{'layer0
 for name in ['awkward_milk_potion','intermediate_milk_potion','animal_allegiance_potion','extended_animal_allegiance_potion']:model('item/'+name,{'parent':'minecraft:item/potion'})
 for tier in ['copper','iron','gold','diamond','netherite']:item(tier+'_horseshoe',MOD+':item/horseshoe')
 runpy.run_path(str(Path(__file__).with_name("fishing-trap-model.py")))["generate"](ROOT.parents[2])
-write(f'assets/{MOD}/blockstates/fishing_trap.json',{'variants':{'':{'model':MOD+':block/fishing_trap'}}})
+write(f'assets/{MOD}/blockstates/fishing_trap.json', {'variants': {
+    'facing='+direction: {'model': MOD+':block/fishing_trap', **({'y': angle} if angle else {})}
+    for direction, angle in [('west', 0), ('north', 90), ('east', 180), ('south', 270)]
+}})
 item('fishing_trap', MOD+':item/fishing_trap')
 for level,parent in [(1,'template_cauldron_level1'),(2,'template_cauldron_level2'),(3,'template_cauldron_full')]:
  model('block/milk_cauldron_'+str(level),{'parent':'minecraft:block/'+parent,'textures':{'bottom':'minecraft:block/cauldron_bottom','content':'minecraft:block/white_concrete','inside':'minecraft:block/cauldron_inner','particle':'minecraft:block/cauldron_side','side':'minecraft:block/cauldron_side','top':'minecraft:block/cauldron_top'}})
@@ -104,7 +108,7 @@ mod('tags/item/items.json',{'replace':False,'values':all_items})
 def obtained(names):return {'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':names}]}}
 clair={'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':['minecraft:potion','minecraft:splash_potion','minecraft:lingering_potion'],'components':{'minecraft:potion_contents':{'potion':MOD+':clairvoyance'}}}]}}
 mod('advancement/root.json',{'display':{'icon':{'id':MOD+':trophy_mount'},'title':'Fantasy Feudalism Items','description':'Discover medieval and fantasy equipment','background':'minecraft:textures/block/stone.png','show_toast':False,'announce_to_chat':False},'criteria':{'equipment':obtained('#'+MOD+':items'),'clairvoyance':clair},'requirements':[['equipment','clairvoyance']]})
-for name,title,description,icon,criterion in [('clairvoyance','A Clearer View','Obtain a Potion of Clairvoyance','minecraft:potion',clair),('animal_allegiance','Animal Allegiance','Obtain a Potion of Animal Allegiance',MOD+':animal_allegiance_potion',obtained([MOD+':animal_allegiance_potion',MOD+':extended_animal_allegiance_potion'])),('saddlebag','Pack for the Road','Obtain a Saddlebag',MOD+':saddlebag',obtained(MOD+':saddlebag')),('horseshoe','A Better Pace','Obtain a Horseshoe',MOD+':iron_horseshoe',obtained([MOD+':'+t+'_horseshoe' for t in ['copper','iron','gold','diamond','netherite']])),('trophy','A Lasting Trophy','Obtain a Mob Trophy',MOD+':zombie_trophy',obtained([MOD+':'+k+'_trophy' for k in head_map])),('fishing_trap','River Harvest','Obtain a Fishing Trap',MOD+':fishing_trap',obtained(MOD+':fishing_trap'))]:
+for name,title,description,icon,criterion in [('clairvoyance','A Clearer View','Obtain a Potion of Clairvoyance','minecraft:potion',clair),('animal_allegiance','Animal Allegiance','Obtain a Potion of Animal Allegiance',MOD+':animal_allegiance_potion',obtained([MOD+':animal_allegiance_potion',MOD+':extended_animal_allegiance_potion'])),('saddlebag','Pack for the Road','Obtain a Saddlebag',MOD+':saddlebag',obtained(MOD+':saddlebag')),('horseshoe','A Better Pace','Obtain a Horseshoe',MOD+':iron_horseshoe',obtained([MOD+':'+t+'_horseshoe' for t in ['copper','iron','gold','diamond','netherite']])),('trophy','A Lasting Trophy','Obtain a Mob Trophy',MOD+':zombie_trophy',obtained([MOD+':'+k+'_trophy' for k in head_map])),('fishing_trap','River Harvest','Obtain a Fish Trap',MOD+':fishing_trap',obtained(MOD+':fishing_trap'))]:
  mod('advancement/'+name+'.json',{'parent':MOD+':root','display':{'icon':{'id':icon},'title':title,'description':description,'frame':'task','show_toast':True,'announce_to_chat':True},'criteria':{'obtain':criterion},'requirements':[['obtain']]})
 
 # Extinguished models retain vanilla UVs and ordinary (non-emissive) shading.

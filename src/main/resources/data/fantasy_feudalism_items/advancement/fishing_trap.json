@@ -5,7 +5,7 @@
       "id": "fantasy_feudalism_items:fishing_trap"
     },
     "title": "River Harvest",
-    "description": "Obtain a Fishing Trap",
+    "description": "Obtain a Fish Trap",
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true
