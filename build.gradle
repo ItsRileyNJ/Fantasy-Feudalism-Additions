@@ -44,6 +44,12 @@ neoForge {
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 
+tasks.named('jar', Jar) {
+    from(['LICENSE', 'TEMPLATE_LICENSE.txt']) {
+        into 'META-INF'
+    }
+}
+
 // Include Minecraft integration tests in the normal verification lifecycle.
 tasks.named('check') { dependsOn 'runGameTestServer' }
 
