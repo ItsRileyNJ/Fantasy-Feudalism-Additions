@@ -14,6 +14,7 @@ import net.minecraft.world.item.*;
 
 /** Compact equipment overview, expanding only when the mount has saddlebag cargo. */
 public final class MountScreen extends AbstractContainerScreen<MountMenu> {
+    private static final int PACK_PANEL_X = 176;
     private final boolean equine;
     private final int[] equipment;
     private final ItemStack[] icons;
@@ -21,9 +22,10 @@ public final class MountScreen extends AbstractContainerScreen<MountMenu> {
     private Component health=Component.empty();
     public MountScreen(MountMenu menu,Inventory inventory,Component title){
         super(menu,inventory,title);equine=menu.getRowCount()==1;
-        equipment=equine?new int[]{0,1,2}:new int[]{0,2,4,5,3};
+        equipment=equine?new int[]{0,1,2}:new int[]{0,2,4,MountInventory.PACK_SLOT,MountInventory.SPYGLASS_SLOT,3,5};
+        if (!equine) imageWidth = 280;
         icons=equine?new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(Items.IRON_HORSE_ARMOR),new ItemStack(MountContent.IRON.get())}:
-            new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(MountContent.IRON.get()),new ItemStack(MountContent.SADDLEBAG.get()),new ItemStack(SleepingBags.ITEMS.get(DyeColor.WHITE).get()),new ItemStack(Items.LANTERN)};
+            new ItemStack[]{new ItemStack(Items.SADDLE),new ItemStack(MountContent.IRON.get()),new ItemStack(MountContent.SADDLEBAG.get()),new ItemStack(MountContent.PACK_STORAGE.get()),new ItemStack(Items.SPYGLASS),new ItemStack(Items.LANTERN),new ItemStack(SleepingBags.ITEMS.get(DyeColor.WHITE).get())};
         imageHeight=menu.panelHeight();inventoryLabelY=menu.playerInventoryY()-12;
     }
     private void updateLayout(){
@@ -56,10 +58,14 @@ public final class MountScreen extends AbstractContainerScreen<MountMenu> {
         gui.fill(x,y,x+imageWidth,y+imageHeight,0xFF373737);
         gui.fill(x+1,y+1,x+imageWidth-1,y+imageHeight-1,0xFFC6C6C6);
         gui.fill(x+1,y+1,x+imageWidth-1,y+2,0xFFFFFFFF);gui.fill(x+1,y+1,x+2,y+imageHeight-1,0xFFFFFFFF);
+        if (!equine) gui.fill(x+PACK_PANEL_X,y+17,x+PACK_PANEL_X+1,y+imageHeight-7,0xFFAAAAAA);
         gui.fill(x+imageWidth-2,y+2,x+imageWidth-1,y+imageHeight-1,0xFF555555);gui.fill(x+2,y+imageHeight-2,x+imageWidth-1,y+imageHeight-1,0xFF555555);
         gui.fill(x+7,y+19,x+63,y+67,0xFF373737);gui.fill(x+8,y+20,x+62,y+66,0xFF686868);
         if(menu.horse!=null)InventoryScreen.renderEntityInInventoryFollowsMouse(gui,x+9,y+21,x+61,y+65,23,0,mouseX,mouseY,menu.horse);
-        for(var s:menu.slots){if(s.x<0||(s.index>=9&&s.index<36&&!equine&&!menu.hasCargo()))continue;slot(gui,s);}
+        for (var s : menu.slots) {
+            // Keep locked equipment visible so its icon and tooltip can explain the requirement.
+            if (s.x >= 0 && (s.index < 9 || s.isActive())) slot(gui, s);
+        }
         for(int i=0;i<equipment.length;i++){var s=menu.getSlot(equipment[i]);if(s.getItem().isEmpty())emptyIcon(gui,s,icons[i]);}
         gui.fill(x+8,y+68,x+168,y+69,0xFFAAAAAA);
         if(menu.hasCargo())gui.fill(x+8,y+139,x+168,y+140,0xFFAAAAAA);
@@ -74,6 +80,8 @@ public final class MountScreen extends AbstractContainerScreen<MountMenu> {
             gui.drawString(font,health,70,54,0x404040,false);
         }
         if(menu.hasCargo())gui.drawString(font,Component.translatable("container.fantasy_feudalism_items.bag_storage"),8,71,0x404040,false);
+        if (!equine) gui.drawString(font,Component.translatable("container.fantasy_feudalism_items.bag_addons"),184,20,0x404040,false);
+        if (menu.hasPack()) gui.drawString(font,Component.translatable("item.fantasy_feudalism_items.pack_storage"),184,71,0x404040,false);
         gui.drawString(font,playerInventoryTitle,8,inventoryLabelY,0x404040,false);
     }
     private Component slotName(int index){return switch(index){
@@ -82,13 +90,17 @@ public final class MountScreen extends AbstractContainerScreen<MountMenu> {
         case 2->Component.translatable("container.fantasy_feudalism_items.horseshoe");
         case 4->Component.translatable("container.fantasy_feudalism_items.saddlebags");
         case 5->Component.translatable("container.fantasy_feudalism_items.sleeping_bag");
+        case MountInventory.PACK_SLOT -> Component.translatable("item.fantasy_feudalism_items.pack_storage");
+        case MountInventory.SPYGLASS_SLOT -> Component.translatable("item.minecraft.spyglass");
         default->Component.translatable("block.minecraft.lantern");
     };}
     private void hints(List<Component> lines,int index,ItemStack stack){
         if(index==4){
             lines.add(Component.translatable("tooltip.fantasy_feudalism_items.mount.storage").withStyle(ChatFormatting.GRAY));
             if(!menu.getContainer().getItem(5).isEmpty())lines.add(Component.translatable("message.fantasy_feudalism_items.remove_sleeping_bag").withStyle(ChatFormatting.YELLOW));
-        }else if(index==5&&!menu.hasCargo())lines.add(Component.translatable("tooltip.fantasy_feudalism_items.mount.requires_bags").withStyle(ChatFormatting.YELLOW));
+            else if (menu.hasBagAttachments()) lines.add(Component.translatable("message.fantasy_feudalism_items.remove_bag_addons").withStyle(ChatFormatting.YELLOW));
+        }else if((index==5 || index==MountInventory.PACK_SLOT || index==MountInventory.SPYGLASS_SLOT) && !menu.hasCargo())
+            lines.add(Component.translatable("tooltip.fantasy_feudalism_items.mount.requires_bags").withStyle(ChatFormatting.YELLOW));
         else if(index==3){
             if(!stack.isEmpty())lines.add(Component.translatable(LightItemFuel.lit(stack)?"tooltip.fantasy_feudalism_items.mount.turn_off":"tooltip.fantasy_feudalism_items.mount.turn_on").withStyle(ChatFormatting.GRAY));
             if(!stack.is(Items.SOUL_LANTERN))lines.add(Component.translatable("tooltip.fantasy_feudalism_items.mount.refuel").withStyle(ChatFormatting.GRAY));

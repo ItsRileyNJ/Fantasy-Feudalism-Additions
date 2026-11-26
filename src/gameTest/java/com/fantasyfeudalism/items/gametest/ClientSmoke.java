@@ -141,7 +141,12 @@ public final class ClientSmoke {
             if(phase==5){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Donkey)||menu.getContainer().getItem(4).isEmpty()||menu.getContainer().getItem(0).isEmpty())return;
                 if(ticks<8)return;menu.refreshLayout();
-                check(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110&&menu.getSlot(5).x==130&&menu.getSlot(3).x==150,"Donkey saddle and bags synchronize in separate equipment slots");
+                check(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110,
+                        "Donkey saddle, horseshoes and bags stay in their equipment slots");
+                check(menu.getSlot(com.fantasyfeudalism.items.mount.MountInventory.PACK_SLOT).x==184
+                        &&menu.getSlot(com.fantasyfeudalism.items.mount.MountInventory.SPYGLASS_SLOT).x==204
+                        &&menu.getSlot(3).x==224&&menu.getSlot(5).x==244,
+                        "Pack Storage, Spyglass, Lantern and Bedroll share the addons row");
                 check(menu.getSlot(9).y==82&&menu.getSlot(36).y==154,"Donkey cargo and player inventory occupy separate sections");
                 var equippedModel=client.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(FeudalItems.ID,"item/saddlebag_equipped")));
                 check(equippedModel.getQuads(null,null,net.minecraft.util.RandomSource.create(0)).size()==78,"Dedicated equipped saddlebag model is registered and baked");

@@ -9,6 +9,9 @@ import net.neoforged.neoforge.registries.*;
 
 public final class MountContent {
     public static final DeferredItem<SaddlebagItem> SADDLEBAG=Content.ITEMS.register("saddlebag",()->new SaddlebagItem(new Item.Properties()));
+    public static final DeferredItem<Item> PACK_STORAGE = Content.ITEMS.registerSimpleItem("pack_storage",
+            new Item.Properties().stacksTo(1).component(net.minecraft.core.component.DataComponents.CONTAINER,
+                    net.minecraft.world.item.component.ItemContainerContents.EMPTY));
     public static final DeferredItem<Item> HALF=Content.ITEMS.registerSimpleItem("saddlebag_half");
     public static final DeferredItem<Horseshoe> COPPER=Content.ITEMS.register("copper_horseshoe",()->new Horseshoe(.05,.15,false,0xFFFFB18C,new Item.Properties()));
     public static final DeferredItem<Horseshoe> IRON=Content.ITEMS.register("iron_horseshoe",()->new Horseshoe(.08,.25,false,0xFFF2F4F5,new Item.Properties()));

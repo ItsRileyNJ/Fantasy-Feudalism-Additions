@@ -1,5 +1,7 @@
 package com.fantasyfeudalism.items.client;
 import com.fantasyfeudalism.items.FeudalItems;
+import com.fantasyfeudalism.items.mount.MountContent;
+import com.fantasyfeudalism.items.mount.MountVisuals;
 import com.fantasyfeudalism.items.sleep.SleepingBags;
 import java.util.EnumMap;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,6 +16,10 @@ import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.item.*;
 public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> extends RenderLayer<T,M> {
     public static final net.minecraft.client.resources.model.ModelResourceLocation SADDLEBAG_MODEL=net.minecraft.client.resources.model.ModelResourceLocation.standalone(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("fantasy_feudalism_items","item/saddlebag_equipped"));
+    public static final ModelResourceLocation PACK_STORAGE_MODEL = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(FeudalItems.ID, "item/pack_storage_equipped"));
+    public static final ModelResourceLocation SPYGLASS_MODEL = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(FeudalItems.ID, "item/spyglass_equipped"));
     private static final EnumMap<DyeColor, ModelResourceLocation> SLEEPING_BAG_MODELS = new EnumMap<>(DyeColor.class);
     static {
         for (var color : DyeColor.values()) {
@@ -37,6 +43,10 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
             pose.pushPose();pose.scale(1,-1,-1);
             var model=Minecraft.getInstance().getModelManager().getModel(SADDLEBAG_MODEL);
             Minecraft.getInstance().getItemRenderer().render(bag,ItemDisplayContext.NONE,false,pose,buffers,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,model);
+            var pack = MountVisuals.packStorage(horse);
+            if (pack.is(MountContent.PACK_STORAGE.get())) renderAddon(pack, PACK_STORAGE_MODEL, pose, buffers, light);
+            var spyglass = MountVisuals.spyglass(horse);
+            if (spyglass.is(Items.SPYGLASS)) renderAddon(spyglass, SPYGLASS_MODEL, pose, buffers, light);
             pose.popPose();
         }
         var sleepingBag=com.fantasyfeudalism.items.mount.MountVisuals.sleepingBag(horse);
@@ -52,6 +62,12 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
         }
         pose.popPose();
     }
+    private static void renderAddon(ItemStack item, ModelResourceLocation location, PoseStack pose, MultiBufferSource buffers, int light) {
+        var client = Minecraft.getInstance();
+        client.getItemRenderer().render(item, ItemDisplayContext.NONE, false, pose, buffers, light,
+                net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, client.getModelManager().getModel(location));
+    }
+
     private void renderHangingLantern(ItemStack lantern,PoseStack pose,MultiBufferSource buffers,int light,T horse,float partial){
         pose.pushPose();
         pose.translate(SaddlebagAttachment.X,SaddlebagAttachment.Y,SaddlebagAttachment.Z);

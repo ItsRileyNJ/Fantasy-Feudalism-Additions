@@ -178,6 +178,70 @@ public final class ContentTests {
         h.assertTrue(inventory.canPlaceItem(2,new ItemStack(MountContent.IRON.get())),"Donkeys have a separate horseshoe slot");h.succeed();
     }
     @GameTest(template="empty")
+    public static void mount_addons_preserve_cargo_separately(GameTestHelper h) {
+        var mount = EntityType.MULE.create(h.getLevel());
+        var player = player(h);
+        var inventory = new MountInventory(mount);
+        var menu = new MountMenu(1, player.getInventory(), inventory);
+        var packSlot = menu.getSlot(MountInventory.PACK_SLOT);
+        var spyglassSlot = menu.getSlot(MountInventory.SPYGLASS_SLOT);
+        var pack = new ItemStack(MountContent.PACK_STORAGE.get());
+        var spyglass = new ItemStack(Items.SPYGLASS);
+        var cargo = menu.slots.stream().filter(slot -> slot.container == inventory
+                && slot.getSlotIndex() >= MountInventory.PACK_CARGO_START).toList();
+        h.assertTrue(cargo.size() == 20 && cargo.stream().noneMatch(Slot::isActive), "Exactly twenty pack slots start locked");
+        h.assertFalse(packSlot.mayPlace(pack) || spyglassSlot.mayPlace(spyglass), "Addons require saddlebags");
+
+        inventory.setItem(4, new ItemStack(MountContent.SADDLEBAG.get()));
+        inventory.setItem(MountInventory.BAG_CARGO_START, new ItemStack(Items.DIAMOND));
+        h.assertTrue(packSlot.mayPlace(pack) && spyglassSlot.mayPlace(spyglass), "Each addon fits its own slot");
+        h.assertFalse(packSlot.mayPlace(spyglass) || spyglassSlot.mayPlace(pack), "Addons cannot swap slots");
+
+        var input = CraftingInput.of(3, 3, java.util.stream.Stream.of(
+                Items.LEATHER, Items.IRON_INGOT, Items.LEATHER,
+                Items.LEATHER, Items.CHEST, Items.LEATHER,
+                Items.LEAD, Items.LEATHER, Items.LEAD).map(ItemStack::new).toList());
+        var recipe = h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, h.getLevel()).orElseThrow();
+        h.assertTrue(recipe.value().assemble(input, h.getLevel().registryAccess()).is(MountContent.PACK_STORAGE.get()),
+                "Leather, iron, chest and leads craft Pack Storage in the requested pattern");
+
+        packSlot.set(pack);
+        spyglassSlot.set(spyglass);
+        h.assertTrue(menu.hasPack() && cargo.stream().allMatch(Slot::isActive), "Fitting the pack unlocks all twenty cargo slots");
+        h.assertTrue(MountVisuals.packStorage(mount).is(pack.getItem()) && MountVisuals.spyglass(mount).is(Items.SPYGLASS),
+                "Both addons synchronize independently");
+        h.assertFalse(menu.getSlot(4).mayPickup(player) || !menu.quickMoveStack(player, 4).isEmpty(),
+                "Saddlebags cannot be removed with their addons equipped");
+
+        // Fill the standard bag, then shift-click to verify that overflow goes to the pack.
+        for (int j = MountInventory.BAG_CARGO_START + 1; j < MountInventory.PACK_CARGO_START; j++) {
+            inventory.setItem(j, new ItemStack(Items.DIAMOND, 64));
+        }
+        menu.getSlot(36).set(new ItemStack(Items.EMERALD, 7));
+        h.assertTrue(!menu.quickMoveStack(player, 36).isEmpty()
+                && cargo.getFirst().getItem().getCount() == 7, "Shift-click fills the pack after the base bag");
+        cargo.getLast().set(new ItemStack(Items.GOLD_INGOT, 12));
+        h.assertFalse(cargo.get(1).mayPlace(pack), "Pack storage rejects nonempty containers");
+
+        var removed = inventory.removeItem(MountInventory.PACK_SLOT, 1);
+        h.assertTrue(cargo.stream().noneMatch(Slot::isActive) && cargo.getLast().getItem().isEmpty()
+                && removed.get(DataComponents.CONTAINER).getStackInSlot(19).getCount() == 12,
+                "Removing a filled pack preserves its cargo and locks the extra slots");
+        h.assertTrue(inventory.getItem(MountInventory.BAG_CARGO_START).is(Items.DIAMOND), "Base saddlebag cargo is independent");
+        h.assertFalse(menu.getSlot(4).mayPickup(player), "The slotted spyglass still locks saddlebag removal");
+        packSlot.set(removed);
+        h.assertTrue(cargo.getFirst().getItem().is(Items.EMERALD) && cargo.getLast().getItem().getCount() == 12,
+                "Reattaching the pack restores both ends of its cargo grid");
+
+        var restored = EntityType.MULE.create(h.getLevel());
+        restored.load(mount.saveWithoutId(new net.minecraft.nbt.CompoundTag()));
+        var restoredInventory = new MountInventory(restored);
+        h.assertTrue(restoredInventory.getItem(MountInventory.SIZE - 1).getCount() == 12
+                && restoredInventory.getItem(MountInventory.SPYGLASS_SLOT).is(Items.SPYGLASS), "Both addons survive entity save/load");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
     public static void two_item_netherite_smithing(GameTestHelper h){
         var input=new SmithingRecipeInput(ItemStack.EMPTY,new ItemStack(MountContent.DIAMOND.get()),new ItemStack(Items.NETHERITE_INGOT));
         var recipe=h.getLevel().getRecipeManager().getRecipeFor(RecipeType.SMITHING,input,h.getLevel()).orElseThrow();

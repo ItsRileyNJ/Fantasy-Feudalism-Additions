@@ -11,6 +11,8 @@ import net.neoforged.api.distmarker.Dist;
 public final class ClientSetup {
     @SubscribeEvent public static void models(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){
         event.register(MountLayer.SADDLEBAG_MODEL);
+        event.register(MountLayer.PACK_STORAGE_MODEL);
+        event.register(MountLayer.SPYGLASS_MODEL);
         for (var color : DyeColor.values()) event.register(MountLayer.sleepingBagModel(color));
     }
     @SubscribeEvent public static void particles(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event){

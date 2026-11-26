@@ -26,6 +26,7 @@ public final class Content {
     public static void creative(java.util.function.Consumer<ItemStack> output) {
         output.accept(new ItemStack(com.fantasyfeudalism.items.mount.MountContent.SADDLEBAG.get()));
         output.accept(new ItemStack(com.fantasyfeudalism.items.mount.MountContent.HALF.get()));
+        output.accept(new ItemStack(com.fantasyfeudalism.items.mount.MountContent.PACK_STORAGE.get()));
         for(var shoe:java.util.List.of(com.fantasyfeudalism.items.mount.MountContent.COPPER,com.fantasyfeudalism.items.mount.MountContent.IRON,com.fantasyfeudalism.items.mount.MountContent.GOLD,com.fantasyfeudalism.items.mount.MountContent.DIAMOND,com.fantasyfeudalism.items.mount.MountContent.NETHERITE))output.accept(new ItemStack(shoe.get()));
         for(var eye:com.fantasyfeudalism.items.spawner.SpawnerEyes.ITEMS.values())output.accept(new ItemStack(eye.get()));
         for(var bag:com.fantasyfeudalism.items.sleep.SleepingBags.ITEMS.values())output.accept(new ItemStack(bag.get()));
