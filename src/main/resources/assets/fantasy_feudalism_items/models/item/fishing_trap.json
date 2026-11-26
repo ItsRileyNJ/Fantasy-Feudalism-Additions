@@ -1,3 +1,6 @@
 {
-  "parent": "fantasy_feudalism_items:block/fishing_trap"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fantasy_feudalism_items:item/fishing_trap"
+  }
 }

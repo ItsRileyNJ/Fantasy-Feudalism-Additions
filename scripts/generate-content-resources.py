@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate content resources and the imported Blockbench trophy models."""
 from pathlib import Path
-import json,zipfile,struct,zlib
+import json,runpy,zipfile,struct,zlib
 ROOT=Path(__file__).resolve().parents[1]/'src/main/resources'
 MOD='fantasy_feudalism_items'
 def write(path,data):
@@ -40,9 +40,9 @@ item('trophy_mount',MOD+':item/trophy_mount')
 model('item/bone_dagger',{'parent':'minecraft:item/handheld','textures':{'layer0':MOD+':item/bone_dagger'}})
 for name in ['awkward_milk_potion','intermediate_milk_potion','animal_allegiance_potion','extended_animal_allegiance_potion']:model('item/'+name,{'parent':'minecraft:item/potion'})
 for tier in ['copper','iron','gold','diamond','netherite']:item(tier+'_horseshoe',MOD+':item/horseshoe')
-model('block/fishing_trap',{'parent':'minecraft:block/cube_all','textures':{'all':'minecraft:block/oak_trapdoor'}})
+runpy.run_path(str(Path(__file__).with_name("fishing-trap-model.py")))["generate"](ROOT.parents[2])
 write(f'assets/{MOD}/blockstates/fishing_trap.json',{'variants':{'':{'model':MOD+':block/fishing_trap'}}})
-model('item/fishing_trap',{'parent':MOD+':block/fishing_trap'})
+item('fishing_trap', MOD+':item/fishing_trap')
 for level,parent in [(1,'template_cauldron_level1'),(2,'template_cauldron_level2'),(3,'template_cauldron_full')]:
  model('block/milk_cauldron_'+str(level),{'parent':'minecraft:block/'+parent,'textures':{'bottom':'minecraft:block/cauldron_bottom','content':'minecraft:block/white_concrete','inside':'minecraft:block/cauldron_inner','particle':'minecraft:block/cauldron_side','side':'minecraft:block/cauldron_side','top':'minecraft:block/cauldron_top'}})
 write(f'assets/{MOD}/blockstates/milk_cauldron.json',{'variants':{'level='+str(n):{'model':MOD+':block/milk_cauldron_'+str(n)} for n in (1,2,3)}})
@@ -137,7 +137,6 @@ for kind in trophy_kinds:
 write(f'assets/{MOD}/lang/en_us.json',lang)
 
 # Keep the supplied Blockbench trophy geometry and vanilla head UVs authoritative.
-import runpy
 runpy.run_path(str(Path(__file__).with_name('trophy-models.py')))['generate'](ROOT.parents[2])
 
 # Preserve the supplied paired saddlebag geometry and generated lantern attachment.
