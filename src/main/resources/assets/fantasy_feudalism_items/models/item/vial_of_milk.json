@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "minecraft:item/potion",
   "textures": {
-    "layer0": "minecraft:item/milk_bucket"
+    "layer0": "fantasy_feudalism_items:item/vial_of_milk_fill"
   }
 }

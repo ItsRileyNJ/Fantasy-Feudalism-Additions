@@ -29,11 +29,12 @@ lang=json.loads((ROOT/f'assets/{MOD}/lang/en_us.json').read_text())
 for name in ['kelp_oil','glow_oil','vial_of_milk','fishing_trap','trophy_mount','saddlebag','saddlebag_half','pack_storage','bone_dagger','stray_head','bogged_head','enderman_head','copper_horseshoe','iron_horseshoe','gold_horseshoe','diamond_horseshoe','netherite_horseshoe','awkward_milk_potion','intermediate_milk_potion','animal_allegiance_potion','extended_animal_allegiance_potion']:
  lang['item.'+MOD+'.'+name]=' '.join(w.capitalize() for w in name.split('_'))
 lang['item.'+MOD+'.animal_allegiance_potion']='Potion of Animal Allegiance'
-lang['item.'+MOD+'.extended_animal_allegiance_potion']='Potion of Animal Allegiance (Extended)'
+lang['item.'+MOD+'.extended_animal_allegiance_potion']='Potion of Animal Allegiance'
 lang['effect.'+MOD+'.animal_allegiance']='Animal Allegiance'
 lang['enchantment.'+MOD+'.sigil']='Sigil'
 lang['message.'+MOD+'.attuned']='Attuned to %s'
-for name,texture in [('kelp_oil','honey_bottle'),('vial_of_milk','milk_bucket'),('saddlebag_half','leather')]:item(name,'minecraft:item/'+texture)
+for name,texture in [('kelp_oil','honey_bottle'),('saddlebag_half','leather')]:item(name,'minecraft:item/'+texture)
+model('item/vial_of_milk', {'parent':'minecraft:item/potion','textures':{'layer0':MOD+':item/vial_of_milk_fill'}})
 mod('recipe/glow_oil.json',{'type':'minecraft:crafting_shapeless','category':'misc','ingredients':[{'item':'minecraft:glow_ink_sac'},{'item':'minecraft:kelp'},{'item':'minecraft:glass_bottle'}],'result':{'id':MOD+':glow_oil','count':1}})
 model('item/glow_oil',{'parent':'minecraft:item/generated','loader':'neoforge:item_layers','textures':{'layer0':'minecraft:item/honey_bottle'},'neoforge_data':{'layers':{'0':{'block_light':15,'sky_light':15,'ambient_occlusion':False}}}})
 item('trophy_mount',MOD+':item/trophy_mount')
