@@ -1,7 +1,7 @@
 # Controls and recipes
 
 - Shift-right-click a tamed horse, donkey or mule to open its equipment menu. The screen shows your mount, its health, and equipment icons. Hover an empty icon for its purpose and controls; a lock marks slots that require saddlebags. Shift-click to equip or take items. Donkey/mule storage expands when bags are fitted and collapses when removed.
-- In that menu, shift-right-click the lantern slot to toggle it. Right-click the lantern with Kelp Oil on the cursor to refuel it; the glass bottle is returned.
+- Fit saddlebags before equipping a lantern, and remove the lantern before taking off the bags. Shift-right-click the equipped lantern to toggle it. Right-click the lantern with Kelp Oil on the cursor to refuel it; the glass bottle is returned.
 - Shift-right-click a placed lantern to toggle it. Right-click it with Kelp Oil to refill. Flint and steel relights a torch and resets its fuel, including while it is still lit.
 - Held lanterns toggle with shift-use in the air. Inventory light stacks can be serviced by right-clicking them with oil or flint and steel on the cursor, as appropriate. Flint and steel costs one durability use per torch in the refreshed stack; split the stack if the tool is too worn.
 - Right-click a held saddlebag to open portable storage. Equip it on a donkey or mule to access the same contents there. Its leather finish is fixed; dyes cannot recolor it.

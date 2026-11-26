@@ -335,6 +335,7 @@ public final class ContentTests {
     @GameTest(template="empty")
     public static void mounted_fuel_uses_world_clock_not_mount_age(GameTestHelper h){
         var horse=EntityType.DONKEY.create(h.getLevel());horse.setPos(Vec3.atCenterOf(h.absolutePos(new BlockPos(2,2,2))));horse.tickCount=7;
+        MountEquipment.set(horse,4,new ItemStack(MountContent.SADDLEBAG.get()));
         var lantern=new ItemStack(Items.LANTERN);LightItemFuel.set(lantern,100,true);MountEquipment.set(horse,3,lantern);
         h.succeedWhen(()->{
             h.assertTrue(h.getLevel().getGameTime()%20==0,"Wait for the fuel clock boundary");
@@ -357,7 +358,9 @@ public final class ContentTests {
     }
     @GameTest(template="empty")
     public static void mount_visuals_sync_only_when_appearance_changes(GameTestHelper h){
-        var horse=EntityType.DONKEY.create(h.getLevel());var lamp=new ItemStack(Items.LANTERN);LightItemFuel.set(lamp,100,true);MountEquipment.set(horse,3,lamp);
+        var horse=EntityType.DONKEY.create(h.getLevel());
+        MountEquipment.set(horse,4,new ItemStack(MountContent.SADDLEBAG.get()));
+        var lamp=new ItemStack(Items.LANTERN);LightItemFuel.set(lamp,100,true);MountEquipment.set(horse,3,lamp);
         var data=horse.getData(com.fantasyfeudalism.additions.content.ModAttachments.MOUNT);var decoded=MountVisuals.lantern(horse);
         LightItemFuel.set(lamp,80,true);MountEquipment.set(horse,3,lamp);
         h.assertTrue(data==horse.getData(com.fantasyfeudalism.additions.content.ModAttachments.MOUNT),"Timer-only updates do not resend mount visuals");
@@ -373,15 +376,46 @@ public final class ContentTests {
         var player=h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         for(var type:java.util.List.of(EntityType.DONKEY,EntityType.MULE)){
             var mount=type.create(h.getLevel());mount.setTamed(true);var inventory=MountEquipment.inventory(mount);var menu=new MountMenu(1,player.getInventory(),inventory);
-            h.assertTrue(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110&&menu.getSlot(5).x==130&&menu.getSlot(3).x==150,"Separate saddle, saddlebag and lantern equipment positions");
+            h.assertTrue(menu.getSlot(0).x==70&&menu.getSlot(2).x==90&&menu.getSlot(4).x==110&&menu.getSlot(5).x==244&&menu.getSlot(3).x==224,"Separate saddle, saddlebag and lantern equipment positions");
             h.assertTrue(menu.getSlot(0).mayPlace(new ItemStack(Items.SADDLE)),"Saddle belongs in dedicated saddle slot");
             h.assertFalse(menu.getSlot(0).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag cannot replace a saddle");
             h.assertTrue(menu.getSlot(4).mayPlace(new ItemStack(MountContent.SADDLEBAG.get())),"Bag belongs in its own equipment slot");
             h.assertFalse(menu.getSlot(4).mayPlace(new ItemStack(Items.SADDLE)),"Saddle cannot replace a bag");
             h.assertFalse(menu.getSlot(9).isActive(),"Cargo is disabled without saddlebags");
+            var lanternSlot = menu.getSlot(3);
+            for (var lamp : List.of(new ItemStack(Items.LANTERN), new ItemStack(Items.SOUL_LANTERN))) {
+                h.assertFalse(lanternSlot.isActive() || lanternSlot.mayPlace(lamp), "Lanterns require saddlebags");
+                menu.getSlot(36).set(lamp);
+                h.assertTrue(menu.quickMoveStack(player, 36).isEmpty() && !lanternSlot.hasItem(),
+                        "Shift-click cannot mount a lantern without bags");
+            }
+
+            var legacyLantern = new ItemStack(Items.LANTERN);
+            LightItemFuel.setStage(legacyLantern, 1, false);
+            inventory.setItem(3, legacyLantern);
+            h.assertTrue(lanternSlot.mayPickup(player) && !lanternSlot.mayPlace(legacyLantern)
+                    && MountVisuals.lantern(mount).isEmpty(), "A legacy lantern remains retrievable without lighting the mount");
+            menu.clicked(3, 0, ClickType.PICKUP, player);
+            h.assertTrue(LightItemFuel.stage(menu.getCarried()) == 1 && !LightItemFuel.lit(menu.getCarried()),
+                    "Removing a legacy lantern preserves its fuel");
+            h.assertTrue(menu.getCarried().is(Items.LANTERN) && inventory.getItem(3).isEmpty(),
+                    "Pickup returns the legacy lantern to the player");
+            menu.setCarried(ItemStack.EMPTY);
+
             inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));menu.refreshLayout();
             h.assertTrue(menu.getSlot(9).isActive()&&menu.getSlot(9).y==82,"Equipping bag enables a separate cargo grid");
             h.assertTrue(menu.getSlot(36).y==154,"Player inventory stays below cargo");
+            h.assertTrue(lanternSlot.isActive() && lanternSlot.mayPlace(new ItemStack(Items.LANTERN))
+                    && lanternSlot.mayPlace(new ItemStack(Items.SOUL_LANTERN)), "Both lantern types fit with saddlebags");
+            h.assertFalse(menu.quickMoveStack(player, 36).isEmpty(), "Shift-click equips the lantern with bags");
+            h.assertTrue(MountVisuals.lantern(mount).is(Items.SOUL_LANTERN), "The mounted lantern becomes visible");
+            h.assertFalse(menu.getSlot(4).mayPickup(player) || !menu.quickMoveStack(player, 4).isEmpty(),
+                    "Remove the lantern before removing the bags");
+            menu.clicked(4, 0, ClickType.PICKUP, player);
+            h.assertTrue(menu.hasCargo(), "A direct click cannot remove bags while a lantern is equipped");
+            h.assertFalse(menu.quickMoveStack(player, 3).isEmpty(), "Shift-click retrieves the equipped lantern");
+            h.assertTrue(menu.getSlot(4).mayPickup(player), "Removing the lantern unlocks the saddlebags");
+
             inventory.removeItemNoUpdate(4);inventory.setChanged();
             h.assertFalse(menu.getSlot(9).isActive(),"Removing the bag removes cargo access");
             h.assertFalse(menu.getSlot(9).mayPlace(new ItemStack(Items.EMERALD)),"No quick-move or click can store cargo without a bag");

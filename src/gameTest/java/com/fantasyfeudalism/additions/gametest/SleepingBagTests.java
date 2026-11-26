@@ -113,7 +113,10 @@ public final class SleepingBagTests {
             h.assertFalse(menu.getSlot(4).mayPickup(p),"Saddlebags cannot be removed with mounted roll");
             h.assertTrue(menu.quickMoveStack(p,4).isEmpty(),"Shift-click cannot remove saddlebags first");
             for(var click:List.of(ClickType.PICKUP,ClickType.QUICK_MOVE,ClickType.SWAP,ClickType.THROW)){menu.clicked(4,0,click,p);h.assertFalse(inventory.getItem(4).isEmpty(),"Click cannot bypass removal order");}
-            inventory.removeItem(5,1);inventory.setChanged();h.assertTrue(menu.getSlot(4).mayPickup(p),"Removing sleeping bag unlocks saddlebags");
+            inventory.removeItem(5,1);
+            h.assertFalse(menu.getSlot(4).mayPickup(p),"A lantern still locks the saddlebags after the bedroll is removed");
+            inventory.removeItem(3,1);
+            h.assertTrue(menu.getSlot(4).mayPickup(p),"Removing the remaining lantern unlocks saddlebags");
             h.assertTrue(MountVisuals.sleepingBag(mount).isEmpty(),"Removal clears optional model");
             inventory.removeItem(4,1);inventory.setChanged();h.assertFalse(menu.getSlot(9).isActive(),"Roll slot never adds extra cargo");
         }

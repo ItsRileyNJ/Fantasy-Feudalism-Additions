@@ -81,6 +81,8 @@ public final class MountEquipment {
         apply(horse);
         var reference=OPEN.get(horse);var menu=reference==null?null:reference.get();
         var lantern=menu==null?item(horse,3):menu.getItem(3);if(lantern.isEmpty()||lantern.is(Items.SOUL_LANTERN)||!lit(lantern))return;
-        com.fantasyfeudalism.additions.lighting.LightItemFuel.advance(lantern,horse);set(horse,3,lantern);
+        var bag = menu == null ? item(horse, 4) : menu.getItem(4);
+        if (bag.isEmpty()) return;
+        LightItemFuel.advance(lantern,horse);set(horse,3,lantern);
     }
 }

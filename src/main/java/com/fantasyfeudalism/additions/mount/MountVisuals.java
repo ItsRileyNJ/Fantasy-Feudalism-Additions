@@ -17,7 +17,10 @@ public final class MountVisuals {
         return cached;
     }
     private static ItemStack parse(Entity entity,CompoundTag data,int slot){return data.contains("Slot"+slot)?ItemStack.parse(entity.registryAccess(),data.getCompound("Slot"+slot)).orElse(ItemStack.EMPTY):ItemStack.EMPTY;}
-    public static ItemStack lantern(Entity entity){return get(entity).lantern();}
+    public static ItemStack lantern(Entity entity) {
+        var equipped = get(entity);
+        return equipped.bag().isEmpty() ? ItemStack.EMPTY : equipped.lantern();
+    }
     public static ItemStack bag(Entity entity){return get(entity).bag();}
     public static ItemStack sleepingBag(Entity entity){return get(entity).sleepingBag();}
     public static ItemStack packStorage(Entity entity){return get(entity).packStorage();}

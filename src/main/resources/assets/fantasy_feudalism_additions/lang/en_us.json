@@ -132,5 +132,5 @@
   "tooltip.fantasy_feudalism_additions.mount.shift_click": "Shift-click items to equip or take.",
   "item.fantasy_feudalism_additions.pack_storage": "Pack Storage",
   "container.fantasy_feudalism_additions.bag_addons": "Saddlebag Addons",
-  "message.fantasy_feudalism_additions.remove_bag_addons": "Remove Pack Storage and the Spyglass before removing the saddlebags."
+  "message.fantasy_feudalism_additions.remove_bag_addons": "Remove the saddlebag addons before removing the saddlebags."
 }

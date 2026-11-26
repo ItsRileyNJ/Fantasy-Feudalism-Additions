@@ -57,7 +57,7 @@ public final class MountInventory extends SimpleContainer {
             case 0->item.is(Items.SADDLE);
             case 1->horse instanceof Horse && item.getItem() instanceof AnimalArmorItem armor && armor.getBodyType()==AnimalArmorItem.BodyType.EQUESTRIAN;
             case 2->MountEquipment.supported(horse) && item.getItem() instanceof Horseshoe;
-            case 3->packMount&&(item.is(Items.LANTERN)||item.is(Items.SOUL_LANTERN));
+            case 3->packMount&&bagPresent&&(item.is(Items.LANTERN)||item.is(Items.SOUL_LANTERN));
             case 5->packMount&&bagPresent&&com.fantasyfeudalism.additions.sleep.SleepingBags.isSleepingBag(item);
             case 4->packMount&&item.is(MountContent.SADDLEBAG.get());
             case PACK_SLOT -> packMount && bagPresent && item.is(MountContent.PACK_STORAGE.get());

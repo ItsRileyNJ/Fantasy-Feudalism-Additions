@@ -99,7 +99,7 @@ public final class MountScreen extends AbstractContainerScreen<MountMenu> {
             lines.add(Component.translatable("tooltip.fantasy_feudalism_additions.mount.storage").withStyle(ChatFormatting.GRAY));
             if(!menu.getContainer().getItem(5).isEmpty())lines.add(Component.translatable("message.fantasy_feudalism_additions.remove_sleeping_bag").withStyle(ChatFormatting.YELLOW));
             else if (menu.hasBagAttachments()) lines.add(Component.translatable("message.fantasy_feudalism_additions.remove_bag_addons").withStyle(ChatFormatting.YELLOW));
-        }else if((index==5 || index==MountInventory.PACK_SLOT || index==MountInventory.SPYGLASS_SLOT) && !menu.hasCargo())
+        }else if((index==3 || index==5 || index==MountInventory.PACK_SLOT || index==MountInventory.SPYGLASS_SLOT) && !menu.hasCargo())
             lines.add(Component.translatable("tooltip.fantasy_feudalism_additions.mount.requires_bags").withStyle(ChatFormatting.YELLOW));
         else if(index==3){
             if(!stack.isEmpty())lines.add(Component.translatable(LightItemFuel.lit(stack)?"tooltip.fantasy_feudalism_additions.mount.turn_off":"tooltip.fantasy_feudalism_additions.mount.turn_on").withStyle(ChatFormatting.GRAY));

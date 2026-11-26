@@ -34,32 +34,26 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
     public MountLayer(RenderLayerParent<T,M> parent){super(parent);}
     @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,T horse,float swing,float amplitude,float partial,float age,float yaw,float pitch){
         if(horse instanceof net.minecraft.world.entity.animal.horse.Horse)return;
-        var bag=com.fantasyfeudalism.additions.mount.MountVisuals.bag(horse);
-        var lantern=com.fantasyfeudalism.additions.mount.MountVisuals.lantern(horse);
-        if(bag.isEmpty()&&lantern.isEmpty())return;
+        var bag = MountVisuals.bag(horse);
+        if (bag.isEmpty()) return;
+        var lantern = MountVisuals.lantern(horse);
         pose.pushPose();((com.fantasyfeudalism.additions.client.mixin.HorseBodyAccessor)getParentModel()).feudalAdditions$body().translateAndRotate(pose);
         if(horse.isBaby())pose.scale(.5f,.5f,.5f);
-        if(!bag.isEmpty()){
-            pose.pushPose();pose.scale(1,-1,-1);
-            var model=Minecraft.getInstance().getModelManager().getModel(SADDLEBAG_MODEL);
-            Minecraft.getInstance().getItemRenderer().render(bag,ItemDisplayContext.NONE,false,pose,buffers,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,model);
-            var pack = MountVisuals.packStorage(horse);
-            if (pack.is(MountContent.PACK_STORAGE.get())) renderAddon(pack, PACK_STORAGE_MODEL, pose, buffers, light);
-            var spyglass = MountVisuals.spyglass(horse);
-            if (spyglass.is(Items.SPYGLASS)) renderAddon(spyglass, SPYGLASS_MODEL, pose, buffers, light);
-            pose.popPose();
-        }
+        pose.pushPose();pose.scale(1,-1,-1);
+        renderAddon(bag, SADDLEBAG_MODEL, pose, buffers, light);
+        var pack = MountVisuals.packStorage(horse);
+        if (pack.is(MountContent.PACK_STORAGE.get())) renderAddon(pack, PACK_STORAGE_MODEL, pose, buffers, light);
+        var spyglass = MountVisuals.spyglass(horse);
+        if (spyglass.is(Items.SPYGLASS)) renderAddon(spyglass, SPYGLASS_MODEL, pose, buffers, light);
+        pose.popPose();
         var sleepingBag=com.fantasyfeudalism.additions.mount.MountVisuals.sleepingBag(horse);
-        if (!bag.isEmpty() && SleepingBags.isSleepingBag(sleepingBag)) {
+        if (SleepingBags.isSleepingBag(sleepingBag)) {
             pose.pushPose();pose.scale(1,-1,-1);
             var model=Minecraft.getInstance().getModelManager().getModel(sleepingBagModel(SleepingBags.color(sleepingBag)));
             Minecraft.getInstance().getItemRenderer().render(sleepingBag,ItemDisplayContext.NONE,false,pose,buffers,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,model);
             pose.popPose();
         }
-        if(!lantern.isEmpty()){
-            if(bag.isEmpty())renderItem(lantern,pose,buffers,light,horse,.47,-.05,-.65,.45f);
-            else renderHangingLantern(lantern,pose,buffers,light,horse,partial);
-        }
+        if (!lantern.isEmpty()) renderHangingLantern(lantern, pose, buffers, light, horse, partial);
         pose.popPose();
     }
     private static void renderAddon(ItemStack item, ModelResourceLocation location, PoseStack pose, MultiBufferSource buffers, int light) {
@@ -84,13 +78,12 @@ public final class MountLayer<T extends AbstractHorse,M extends HorseModel<T>> e
         pose.popPose();
         float scale=SaddlebagAttachment.LANTERN_SCALE;
         // The vanilla lantern handle reaches one model pixel above its item center.
-        renderItem(lantern,pose,buffers,light,horse,0,chainLength+scale/16,0,scale,ItemDisplayContext.NONE);
+        pose.pushPose();
+        pose.translate(0, chainLength + scale / 16, 0);
+        pose.scale(scale, -scale, -scale);
+        Minecraft.getInstance().getItemRenderer().renderStatic(lantern, ItemDisplayContext.NONE, light,
+                net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, pose, buffers, horse.level(), horse.getId());
         pose.popPose();
-    }
-    private void renderItem(ItemStack item,PoseStack pose,MultiBufferSource buffers,int light,T horse,double x,double y,double z,float scale){
-        renderItem(item,pose,buffers,light,horse,x,y,z,scale,ItemDisplayContext.FIXED);
-    }
-    private void renderItem(ItemStack item,PoseStack pose,MultiBufferSource buffers,int light,T horse,double x,double y,double z,float scale,ItemDisplayContext context){
-        pose.pushPose();pose.translate(x,y,z);pose.scale(scale,-scale,-scale);Minecraft.getInstance().getItemRenderer().renderStatic(item,context,light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,pose,buffers,horse.level(),horse.getId());pose.popPose();
+        pose.popPose();
     }
 }

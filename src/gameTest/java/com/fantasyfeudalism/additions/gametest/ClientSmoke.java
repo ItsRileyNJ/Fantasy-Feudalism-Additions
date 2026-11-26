@@ -199,7 +199,7 @@ public final class ClientSmoke {
             if(phase==9){
                 if(!(client.player.containerMenu instanceof MountMenu menu)||!(menu.horse instanceof Mule)||menu.hasCargo()||ticks<8)return;
                 if(!(client.screen instanceof com.fantasyfeudalism.additions.client.MountScreen screen)||screen.getYSize()!=180)return;
-                check(menu.getSlot(36).y==98&&!menu.getSlot(9).isActive()&&!menu.getSlot(5).isActive(),"Unfitted mule has compact inventory and locked storage/bedroll");
+                check(menu.getSlot(36).y==98&&!menu.getSlot(9).isActive()&&!menu.getSlot(5).isActive()&&!menu.getSlot(3).isActive(),"Unfitted mule has locked storage, bedroll and lantern slots");
                 check(screen.getGuiTop()>=0&&screen.getGuiTop()+screen.getYSize()<=client.getWindow().getGuiScaledHeight(),"Compact screen fits the client viewport");
                 screenshot(client,"mule-empty");
                 client.getSingleplayerServer().execute(()->{var mount=(AbstractHorse)client.getSingleplayerServer().overworld().getEntity(muleId);var inventory=MountEquipment.inventory(mount);inventory.setItem(4,new ItemStack(MountContent.SADDLEBAG.get()));inventory.setItem(9,new ItemStack(Items.EMERALD,7));});phase=10;ticks=0;return;

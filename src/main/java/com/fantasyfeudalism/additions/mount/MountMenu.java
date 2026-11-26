@@ -16,7 +16,7 @@ public final class MountMenu extends ChestMenu {
     private static net.minecraft.world.entity.animal.horse.AbstractHorse mount(Container container){return container instanceof MountInventory server?server.horse():container instanceof ClientInventory client?client.horse:null;}
     public static MountMenu client(int id,Inventory inventory,net.minecraft.network.RegistryFriendlyByteBuf data){var entity=inventory.player.level().getEntity(data.readVarInt());return new MountMenu(id,inventory,new ClientInventory(entity instanceof net.minecraft.world.entity.animal.horse.AbstractHorse h?h:null));}
     private static boolean requiresBags(int slot) {
-        return slot == 5 || slot == MountInventory.PACK_SLOT || slot == MountInventory.SPYGLASS_SLOT;
+        return slot == 3 || slot == 5 || slot == MountInventory.PACK_SLOT || slot == MountInventory.SPYGLASS_SLOT;
     }
 
     public boolean disabled(int index) {
@@ -40,7 +40,7 @@ public final class MountMenu extends ChestMenu {
         return hasCargo() && getContainer().getItem(MountInventory.PACK_SLOT).is(MountContent.PACK_STORAGE.get());
     }
     public boolean hasBagAttachments() {
-        return !getContainer().getItem(5).isEmpty() || !getContainer().getItem(MountInventory.PACK_SLOT).isEmpty()
+        return !getContainer().getItem(3).isEmpty() || !getContainer().getItem(5).isEmpty() || !getContainer().getItem(MountInventory.PACK_SLOT).isEmpty()
                 || !getContainer().getItem(MountInventory.SPYGLASS_SLOT).isEmpty();
     }
     private int packMenuStart() { return getRowCount() * 9 + 36; }
@@ -131,7 +131,7 @@ public final class MountMenu extends ChestMenu {
                             : "message.fantasy_feudalism_additions.remove_sleeping_bag"),true);
             return;
         }
-        if(slot==3&&button==1&&!getContainer().getItem(3).isEmpty()){
+        if(slot==3&&button==1&&hasCargo()&&!getContainer().getItem(3).isEmpty()){
             var lantern=getContainer().getItem(3);
             if(type==ClickType.QUICK_MOVE){MountEquipment.toggle(lantern);getContainer().setChanged();broadcastChanges();return;}
             if(type==ClickType.PICKUP&&com.fantasyfeudalism.additions.lighting.GlowOil.isOil(getCarried())&&lantern.is(Items.LANTERN)){
