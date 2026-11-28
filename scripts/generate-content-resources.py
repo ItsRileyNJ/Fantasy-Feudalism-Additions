@@ -76,7 +76,7 @@ p=ROOT/f'assets/{MOD}/textures/mob_effect/animal_allegiance.png';p.parent.mkdir(
 for mob,drop in [('zombie','rotten_flesh'),('skeleton','bone'),('spider','string'),('cave_spider','spider_eye'),('blaze','blaze_rod'),('magma_cube','magma_cream')]:
  name=mob+'_spawner_eye'
  shaped(name,['DDD','DED','DDD'],{'D':{'item':'minecraft:'+drop},'E':{'item':'minecraft:ender_eye'}},name)
- item(name,'minecraft:item/ender_eye')
+ item(name,MOD+':item/'+name)
  lang['item.'+MOD+'.'+name]=' '.join(w.capitalize() for w in name.split('_'))
 write(f'assets/{MOD}/lang/en_us.json',lang)
 

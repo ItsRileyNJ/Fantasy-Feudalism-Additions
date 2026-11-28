@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/ender_eye"
+    "layer0": "fantasy_feudalism_additions:item/skeleton_spawner_eye"
   }
 }
